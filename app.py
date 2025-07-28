@@ -13,9 +13,8 @@ import logging
 from config import config
 from config_local import *
 from models import db, Package
-from utils import send_shenzhen_arrival_email, send_cafe_arrival_email, generate_pickup_codes_qr
+from utils import send_shenzhen_arrival_email, send_cafe_arrival_email, generate_pickup_codes_qr, validate_email_address
 from functools import wraps
-import pandas as pd
 
 def send_email_async(package, email_type, mail, app):
     """异步发送邮件"""
@@ -52,7 +51,18 @@ def create_app(config_name='default'):
     def format_datetime_filter(dt):
         if dt is None:
             return ''
-        return dt.strftime('%Y-%m-%d %H:%M:%S')
+        # 转换为巴黎时间
+        try:
+            import pytz
+            utc_tz = pytz.UTC
+            paris_tz = pytz.timezone('Europe/Paris')
+            if dt.tzinfo is None:
+                dt = utc_tz.localize(dt)
+            paris_time = dt.astimezone(paris_tz)
+            return paris_time.strftime('%Y-%m-%d %H:%M:%S')
+        except:
+            # 如果转换失败，返回原始时间
+            return dt.strftime('%Y-%m-%d %H:%M:%S')
     
     @app.template_filter('get_status_info')
     def get_status_info_filter(status):
@@ -105,6 +115,8 @@ def create_app(config_name='default'):
                     
                     if file_size == 0:
                         import_result = {'success': False, 'error': '上传的文件为空'}
+                    elif file_size > app.config.get('MAX_CONTENT_LENGTH', 16 * 1024 * 1024):
+                        import_result = {'success': False, 'error': '文件大小超过限制（最大16MB）'}
                     else:
                         df = pd.read_excel(file, engine='openpyxl')
                         
@@ -146,7 +158,7 @@ def create_app(config_name='default'):
                                         shenzhen_tracking_number=tracking_number,
                                         customer_email=email,
                                         notes=notes,
-                                        pickup_code=Package.generate_pickup_code()  # 生成取件码
+                                        pickup_code=Package.generate_pickup_code()
                                     )
                                     db.session.add(package)
                                     db.session.flush()  # 获取ID
@@ -199,7 +211,7 @@ def create_app(config_name='default'):
             )
         
         # 分页
-        packages = query.order_by(Package.created_at.desc()).paginate(
+        packages = query.order_by(Package.cafe_arrival_date.desc().nullslast()).paginate(
             page=page, per_page=app.config['ITEMS_PER_PAGE'], error_out=False
         )
         
@@ -396,8 +408,9 @@ def create_app(config_name='default'):
                 'pickup_code': package.pickup_code,
                 'customer_name': package.customer_name,
                 'shenzhen_tracking_number': package.shenzhen_tracking_number,
-                'cafe_arrival_date': package.cafe_arrival_date.strftime('%m-%d %H:%M') if package.cafe_arrival_date else None,
-                'created_at': package.created_at.strftime('%m-%d %H:%M') if package.created_at else None
+                'cafe_arrival_date': package.cafe_arrival_date_paris.strftime('%m-%d %H:%M') if package.cafe_arrival_date_paris else None,
+                'latest_pickup_time': package.latest_pickup_time_paris.strftime('%m-%d %H:%M') if package.latest_pickup_time_paris else None,
+                'is_overdue': package.is_overdue
             })
         
         return jsonify({
@@ -410,10 +423,11 @@ def create_app(config_name='default'):
     @app.route('/qr_codes')
     def qr_codes():
         """二维码页面 - 显示所有取件码的二维码"""
-        packages = Package.query.filter_by(status='cafe_arrived').all()
+        # 获取所有有取件码的包裹
+        packages = Package.query.filter(Package.pickup_code.isnot(None)).order_by(Package.cafe_arrival_date.desc().nullslast()).all()
         
         if not packages:
-            flash('目前没有已到达咖啡馆的包裹', 'info')
+            flash('目前没有包裹', 'info')
             return redirect(url_for('index'))
         
         qr_image, qr_text = generate_pickup_codes_qr(packages)
@@ -426,8 +440,8 @@ def create_app(config_name='default'):
     @app.route('/mobile_pickup')
     def mobile_pickup():
         """移动端取件码页面 - 方便店家在手机上查看"""
-        # 获取已到达咖啡馆的包裹
-        packages = Package.query.filter_by(status='cafe_arrived').order_by(Package.cafe_arrival_date.desc()).all()
+        # 获取所有有取件码的包裹
+        packages = Package.query.filter(Package.pickup_code.isnot(None)).order_by(Package.cafe_arrival_date.desc().nullslast()).all()
         return render_template('mobile_pickup.html', packages=packages)
     
     @app.route('/pickup_cards')
@@ -448,7 +462,7 @@ def create_app(config_name='default'):
         # 今日数据
         today = datetime.utcnow().date()
         today_packages = Package.query.filter(
-            db.func.date(Package.created_at) == today
+            db.func.date(Package.cafe_arrival_date) == today
         ).count()
         
         stats_data = {
@@ -740,15 +754,13 @@ def create_app(config_name='default'):
             # 如果是标记为到达咖啡馆
             if new_status == 'cafe_arrived' and old_status != 'cafe_arrived':
                 package.cafe_arrival_date = datetime.utcnow()
-                # 异步发送咖啡馆到达邮件
+                # 同步发送咖啡馆到达邮件
                 mail = Mail(app)
-                thread = threading.Thread(
-                    target=send_email_async,
-                    args=(package, 'cafe', mail, app)
-                )
-                thread.daemon = True
-                thread.start()
-                flash(f'包裹已标记为到达咖啡馆！取件码: {package.pickup_code}，取件通知邮件正在后台发送。', 'success')
+                success = send_cafe_arrival_email(package, mail)
+                if success:
+                    flash(f'✅ 包裹已标记为到达咖啡馆！取件码: {package.pickup_code}，取件通知邮件发送成功。', 'success')
+                else:
+                    flash(f'⚠️ 包裹已标记为到达咖啡馆！取件码: {package.pickup_code}，但邮件发送失败。', 'warning')
             
             # 如果是标记为已取件
             elif new_status == 'picked_up' and old_status != 'picked_up':
@@ -777,16 +789,14 @@ def create_app(config_name='default'):
                 flash('深圳到达邮件已经发送过了', 'info')
                 return redirect(url_for('index'))
             
-            # 异步发送邮件
+            # 同步发送邮件（立即更新状态）
             mail = Mail(app)
-            thread = threading.Thread(
-                target=send_email_async,
-                args=(package, 'shenzhen', mail, app)
-            )
-            thread.daemon = True
-            thread.start()
+            success = send_shenzhen_arrival_email(package, mail)
             
-            flash(f'深圳到达邮件正在后台发送！客户: {package.customer_name}', 'success')
+            if success:
+                flash(f'✅ 深圳到达邮件发送成功！客户: {package.customer_name}', 'success')
+            else:
+                flash(f'❌ 深圳到达邮件发送失败！客户: {package.customer_name}', 'error')
             
         except Exception as e:
             flash(f'发送邮件时发生错误: {str(e)}', 'error')
@@ -803,21 +813,21 @@ def create_app(config_name='default'):
                 flash('只有已到咖啡馆的包裹才能发送咖啡馆到达邮件', 'warning')
                 return redirect(url_for('index'))
             
-            # 异步发送邮件
+            # 同步发送邮件（立即更新状态）
             mail = Mail(app)
-            thread = threading.Thread(
-                target=send_email_async,
-                args=(package, 'cafe', mail, app)
-            )
-            thread.daemon = True
-            thread.start()
+            success = send_cafe_arrival_email(package, mail)
             
-            flash(f'咖啡馆到达邮件正在后台发送！客户: {package.customer_name}，取件码: {package.pickup_code}', 'success')
+            if success:
+                flash(f'✅ 咖啡馆到达邮件发送成功！客户: {package.customer_name}，取件码: {package.pickup_code}', 'success')
+            else:
+                flash(f'❌ 咖啡馆到达邮件发送失败！客户: {package.customer_name}', 'error')
             
         except Exception as e:
             flash(f'发送邮件时发生错误: {str(e)}', 'error')
         
         return redirect(url_for('index'))
+    
+
     
     return app
 

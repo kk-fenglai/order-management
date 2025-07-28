@@ -6,26 +6,317 @@
     <title>{% block title %}订单管理系统{% endblock %}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --nordic-white: #f8fafc;
+            --nordic-gray: #64748b;
+            --nordic-dark: #1e293b;
+            --nordic-blue: #3b82f6;
+            --nordic-green: #10b981;
+            --nordic-orange: #f59e0b;
+            --nordic-red: #ef4444;
+            --nordic-border: #e2e8f0;
+            --nordic-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --nordic-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        
+        * {
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--nordic-white);
+            color: var(--nordic-dark);
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+        }
+        
+        /* 导航栏样式 */
+        .navbar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            backdrop-filter: blur(10px);
+            border: none;
+            box-shadow: var(--nordic-shadow);
+            padding: 1rem 0;
+        }
+        
         .navbar-brand {
-            font-weight: bold;
+            font-weight: 700;
+            font-size: 1.5rem;
+            color: white !important;
+            text-decoration: none;
         }
+        
+        .navbar-nav .nav-link {
+            color: rgba(255, 255, 255, 0.9) !important;
+            font-weight: 500;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            margin: 0 0.25rem;
+        }
+        
+        .navbar-nav .nav-link:hover {
+            color: white !important;
+            background-color: rgba(255, 255, 255, 0.1);
+            transform: translateY(-1px);
+        }
+        
+        .navbar-nav .nav-link.active {
+            background-color: rgba(255, 255, 255, 0.2);
+            color: white !important;
+        }
+        
+        /* 卡片样式 */
         .card {
-            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
-            border: 1px solid rgba(0, 0, 0, 0.125);
+            border: none;
+            border-radius: 16px;
+            box-shadow: var(--nordic-shadow);
+            background: white;
+            transition: all 0.3s ease;
+            overflow: hidden;
         }
+        
+        .card:hover {
+            box-shadow: var(--nordic-shadow-lg);
+            transform: translateY(-2px);
+        }
+        
+        .card-header {
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            border-bottom: 1px solid var(--nordic-border);
+            padding: 1.5rem;
+            font-weight: 600;
+            color: var(--nordic-dark);
+        }
+        
+        .card-body {
+            padding: 1.5rem;
+        }
+        
+        /* 按钮样式 */
+        .btn {
+            border-radius: 12px;
+            font-weight: 500;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: var(--nordic-shadow);
+        }
+        
         .btn-primary {
-            background-color: #007bff;
-            border-color: #007bff;
+            background: linear-gradient(135deg, var(--nordic-blue) 0%, #1d4ed8 100%);
+            color: white;
         }
+        
         .btn-success {
-            background-color: #28a745;
-            border-color: #28a745;
+            background: linear-gradient(135deg, var(--nordic-green) 0%, #059669 100%);
+            color: white;
         }
-        .status-pending { color: #ffc107; }
-        .status-confirmed { color: #17a2b8; }
-        .status-shipped { color: #007bff; }
-        .status-delivered { color: #28a745; }
+        
+        .btn-warning {
+            background: linear-gradient(135deg, var(--nordic-orange) 0%, #d97706 100%);
+            color: white;
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, var(--nordic-red) 0%, #dc2626 100%);
+            color: white;
+        }
+        
+        .btn-outline-primary {
+            border: 2px solid var(--nordic-blue);
+            color: var(--nordic-blue);
+            background: transparent;
+        }
+        
+        .btn-outline-primary:hover {
+            background: var(--nordic-blue);
+            color: white;
+        }
+        
+        .btn-outline-success {
+            border: 2px solid var(--nordic-green);
+            color: var(--nordic-green);
+            background: transparent;
+        }
+        
+        .btn-outline-success:hover {
+            background: var(--nordic-green);
+            color: white;
+        }
+        
+        /* 表格样式 */
+        .table {
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: var(--nordic-shadow);
+        }
+        
+        .table thead th {
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            border: none;
+            font-weight: 600;
+            color: var(--nordic-dark);
+            padding: 1rem;
+        }
+        
+        .table tbody td {
+            border: none;
+            border-bottom: 1px solid var(--nordic-border);
+            padding: 1rem;
+            vertical-align: middle;
+        }
+        
+        .table tbody tr:hover {
+            background-color: #f8fafc;
+        }
+        
+        /* 徽章样式 */
+        .badge {
+            border-radius: 8px;
+            font-weight: 500;
+            padding: 0.5rem 0.75rem;
+        }
+        
+        /* 表单样式 */
+        .form-control, .form-select {
+            border: 2px solid var(--nordic-border);
+            border-radius: 12px;
+            padding: 0.75rem 1rem;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+        
+        .form-control:focus, .form-select:focus {
+            border-color: var(--nordic-blue);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+        
+        .form-label {
+            font-weight: 500;
+            color: var(--nordic-dark);
+            margin-bottom: 0.5rem;
+        }
+        
+        /* 警告框样式 */
+        .alert {
+            border: none;
+            border-radius: 12px;
+            padding: 1rem 1.5rem;
+            font-weight: 500;
+        }
+        
+        .alert-success {
+            background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+            color: #065f46;
+        }
+        
+        .alert-warning {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            color: #92400e;
+        }
+        
+        .alert-danger {
+            background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+            color: #991b1b;
+        }
+        
+        .alert-info {
+            background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+            color: #1e40af;
+        }
+        
+        /* 页脚样式 */
+        footer {
+            background: linear-gradient(135deg, var(--nordic-dark) 0%, #334155 100%);
+            color: white;
+            padding: 2rem 0;
+            margin-top: 4rem;
+        }
+        
+        /* 状态样式 */
+        .status-pending { color: var(--nordic-orange); }
+        .status-confirmed { color: var(--nordic-blue); }
+        .status-shipped { color: var(--nordic-blue); }
+        .status-delivered { color: var(--nordic-green); }
+        
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .card-body {
+                padding: 1rem;
+            }
+            
+            .btn {
+                padding: 0.5rem 1rem;
+                font-size: 0.9rem;
+            }
+        }
+        
+        /* 动画效果 */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .fade-in-up {
+            animation: fadeInUp 0.6s ease-out;
+        }
+        
+        /* 渐变文字效果 */
+        .text-gradient {
+            background: linear-gradient(135deg, var(--nordic-blue) 0%, #667eea 50%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        /* 进度条样式 */
+        .progress {
+            height: 12px;
+            border-radius: 6px;
+            background-color: var(--nordic-border);
+        }
+        
+        .progress-bar {
+            border-radius: 6px;
+            background: linear-gradient(135deg, var(--nordic-green) 0%, #059669 100%);
+        }
+        
+        /* 自定义滚动条 */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: var(--nordic-white);
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: var(--nordic-gray);
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--nordic-dark);
+        }
     </style>
 </head>
 <body>
@@ -91,7 +382,7 @@
 
     <footer class="bg-light text-center text-muted py-4 mt-5">
         <div class="container">
-            <p>&copy; 2024 集运系统. 保留所有权利.</p>
+                            <p>&copy; 2025 NÜNA LINKS 集运中心. 保留所有权利.</p>
         </div>
     </footer>
 

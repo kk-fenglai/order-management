@@ -38,15 +38,15 @@
                                     </span>
                                 </p>
                                 <p><strong>最后取件时间:</strong> 
-                                    {% if package.latest_pickup_time %}
+                                    {% if package.latest_pickup_time_paris %}
                                         {% if package.is_overdue %}
                                             <span class="text-danger fw-bold">
                                                 <i class="fas fa-exclamation-triangle me-1"></i>
-                                                {{ package.latest_pickup_time.strftime('%Y-%m-%d %H:%M') }} (已超期)
+                                                {{ package.latest_pickup_time_paris.strftime('%Y-%m-%d %H:%M') }} (已超期)
                                             </span>
                                         {% else %}
                                             <span class="text-muted">
-                                                {{ package.latest_pickup_time.strftime('%Y-%m-%d %H:%M') }}
+                                                {{ package.latest_pickup_time_paris.strftime('%Y-%m-%d %H:%M') }}
                                             </span>
                                         {% endif %}
                                     {% else %}
@@ -62,6 +62,8 @@
                             <div class="alert alert-info">{{ package.notes }}</div>
                         </div>
                         {% endif %}
+                        
+
                     </div>
                 </div>
 
@@ -162,6 +164,8 @@
                                 </a>
                             {% endif %}
                             
+
+                            
                             <!-- 删除按钮 -->
                             <form method="POST" action="{{ url_for('delete_package', package_id=package.id) }}" class="d-grid">
                                 <button type="submit" class="btn btn-outline-danger"
@@ -181,8 +185,14 @@
                         </h5>
                     </div>
                     <div class="card-body">
-                        <p><strong>创建时间:</strong><br>{{ package.created_at.strftime('%Y-%m-%d %H:%M') if package.created_at else '未设置' }}</p>
-                        <p><strong>最后更新:</strong><br>{{ package.updated_at.strftime('%Y-%m-%d %H:%M') if package.updated_at else '未设置' }}</p>
+                        <p><strong>创建时间:</strong><br>{{ package.created_at|format_datetime if package.created_at else '未设置' }}</p>
+                        <p><strong>最后更新:</strong><br>{{ package.updated_at|format_datetime if package.updated_at else '未设置' }}</p>
+                        {% if package.cafe_arrival_date_paris %}
+                        <p><strong>咖啡馆到达时间:</strong><br>{{ package.cafe_arrival_date_paris.strftime('%Y-%m-%d %H:%M') }}</p>
+                        {% endif %}
+                        {% if package.pickup_date_paris %}
+                        <p><strong>取件时间:</strong><br>{{ package.pickup_date_paris.strftime('%Y-%m-%d %H:%M') }}</p>
+                        {% endif %}
                     </div>
                 </div>
             </div>

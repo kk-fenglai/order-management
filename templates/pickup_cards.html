@@ -43,8 +43,10 @@
                         <!-- 包裹信息 -->
                         <div class="text-start small">
                             <p class="mb-1"><strong>深圳单号:</strong> {{ package.shenzhen_tracking_number }}</p>
-                            <p class="mb-1"><strong>到达时间:</strong> {{ package.cafe_arrival_date.strftime('%m-%d %H:%M') }}</p>
-                            <p class="mb-0"><strong>生成时间:</strong> {{ package.created_at.strftime('%m-%d %H:%M') }}</p>
+                                                    {% if package.cafe_arrival_date_paris %}
+                        <p class="mb-1"><strong>到达时间:</strong> {{ package.cafe_arrival_date_paris.strftime('%m-%d %H:%M') }}</p>
+                        {% endif %}
+                        <p class="mb-0"><strong>生成时间:</strong> {{ package.created_at|format_datetime }}</p>
                         </div>
                     </div>
                     <div class="card-footer text-center">

@@ -18,6 +18,9 @@ MAIL_USE_SSL = False
 MAIL_USERNAME = 'alzy1210@163.com'
 MAIL_PASSWORD = 'MAjQjkgenAqciFEW'
 
+# 服务器配置 - 使用实际IP地址，让手机可以访问
+BASE_URL = 'http://192.168.43.40:5000'
+
 # 设置环境变量
 os.environ['SECRET_KEY'] = SECRET_KEY
 os.environ['FLASK_DEBUG'] = str(FLASK_DEBUG)
@@ -27,4 +30,5 @@ os.environ['MAIL_PORT'] = str(MAIL_PORT)
 os.environ['MAIL_USE_TLS'] = str(MAIL_USE_TLS)
 os.environ['MAIL_USE_SSL'] = str(MAIL_USE_SSL)
 os.environ['MAIL_USERNAME'] = MAIL_USERNAME
-os.environ['MAIL_PASSWORD'] = MAIL_PASSWORD 
+os.environ['MAIL_PASSWORD'] = MAIL_PASSWORD
+os.environ['BASE_URL'] = BASE_URL 

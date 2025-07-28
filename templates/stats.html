@@ -5,70 +5,83 @@
 {% block content %}
 <div class="row">
     <div class="col-12">
-        <h2><i class="fas fa-chart-bar me-2"></i>统计信息</h2>
+        <div class="fade-in-up">
+            <h1 class="display-5 fw-bold text-gradient mb-2">
+                <i class="fas fa-chart-bar me-3"></i>统计信息
+            </h1>
+            <p class="text-muted fs-5">系统数据概览与业务分析</p>
+        </div>
         
         <div class="row mt-4">
-            <div class="col-md-3 mb-3">
-                <div class="card bg-primary text-white">
-                    <div class="card-body text-center">
-                        <i class="fas fa-boxes fa-2x mb-2"></i>
-                        <h3>{{ stats.total }}</h3>
-                        <p class="mb-0">总包裹数</p>
+            <div class="col-md-3 mb-4">
+                <div class="card fade-in-up">
+                    <div class="card-body text-center p-4">
+                        <div class="text-primary mb-3">
+                            <i class="fas fa-boxes fa-3x"></i>
+                        </div>
+                        <h2 class="fw-bold text-primary mb-2">{{ stats.total }}</h2>
+                        <p class="text-muted mb-0">总包裹数</p>
                     </div>
                 </div>
             </div>
             
-            <div class="col-md-3 mb-3">
-                <div class="card bg-warning text-white">
-                    <div class="card-body text-center">
-                        <i class="fas fa-truck fa-2x mb-2"></i>
-                        <h3>{{ stats.shenzhen_arrived }}</h3>
-                        <p class="mb-0">已到深圳</p>
+            <div class="col-md-3 mb-4">
+                <div class="card fade-in-up">
+                    <div class="card-body text-center p-4">
+                        <div class="text-warning mb-3">
+                            <i class="fas fa-truck fa-3x"></i>
+                        </div>
+                        <h2 class="fw-bold text-warning mb-2">{{ stats.shenzhen_arrived }}</h2>
+                        <p class="text-muted mb-0">已到深圳</p>
                     </div>
                 </div>
             </div>
             
-            <div class="col-md-3 mb-3">
-                <div class="card bg-success text-white">
-                    <div class="card-body text-center">
-                        <i class="fas fa-store fa-2x mb-2"></i>
-                        <h3>{{ stats.cafe_arrived }}</h3>
-                        <p class="mb-0">已到咖啡馆</p>
+            <div class="col-md-3 mb-4">
+                <div class="card fade-in-up">
+                    <div class="card-body text-center p-4">
+                        <div class="text-success mb-3">
+                            <i class="fas fa-store fa-3x"></i>
+                        </div>
+                        <h2 class="fw-bold text-success mb-2">{{ stats.cafe_arrived }}</h2>
+                        <p class="text-muted mb-0">已到咖啡馆</p>
                     </div>
                 </div>
             </div>
             
-            <div class="col-md-3 mb-3">
-                <div class="card bg-info text-white">
-                    <div class="card-body text-center">
-                        <i class="fas fa-check-circle fa-2x mb-2"></i>
-                        <h3>{{ stats.picked_up }}</h3>
-                        <p class="mb-0">已取件</p>
+            <div class="col-md-3 mb-4">
+                <div class="card fade-in-up">
+                    <div class="card-body text-center p-4">
+                        <div class="text-info mb-3">
+                            <i class="fas fa-check-circle fa-3x"></i>
+                        </div>
+                        <h2 class="fw-bold text-info mb-2">{{ stats.picked_up }}</h2>
+                        <p class="text-muted mb-0">已取件</p>
                     </div>
                 </div>
             </div>
         </div>
         
         <div class="row">
-            <div class="col-md-6">
-                <div class="card">
+            <div class="col-md-6 mb-4">
+                <div class="card fade-in-up">
                     <div class="card-header">
                         <h5 class="card-title mb-0">
-                            <i class="fas fa-calendar-day me-2"></i>今日数据
+                            <i class="fas fa-calendar-day me-2 text-primary"></i>今日数据
                         </h5>
                     </div>
-                    <div class="card-body text-center">
-                        <h2 class="text-primary">{{ stats.today }}</h2>
+                    <div class="card-body text-center p-4">
+                        <h2 class="text-primary fw-bold mb-2">{{ stats.today }}</h2>
                         <p class="text-muted">今日新增包裹</p>
                     </div>
                 </div>
             </div>
             
-            <div class="col-md-6">
-                <div class="card">
+            <div class="col-md-6 mb-4">
+                <div class="card fade-in-up">
                     <div class="card-header">
                         <h5 class="card-title mb-0">
-                            <i class="fas fa-percentage me-2"></i>完成率
+                            <i class="fas fa-percentage me-2 text-success"></i>完成率
                         </h5>
                     </div>
                     <div class="card-body">

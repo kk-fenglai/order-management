@@ -6,41 +6,51 @@
 <div class="container-fluid">
     <div class="row">
         <div class="col-12">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <h4>移动端取件码</h4>
-                <div>
-                    <button onclick="refreshPage()" class="btn btn-sm btn-outline-primary">
-                        <i class="fas fa-sync-alt"></i>
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div class="fade-in-up">
+                    <h1 class="display-6 fw-bold text-gradient mb-2">
+                        <i class="fas fa-mobile-alt me-3"></i>移动端取件码
+                    </h1>
+                    <p class="text-muted">便捷的移动端取件码查看界面</p>
+                </div>
+                <div class="btn-group" role="group">
+                    <button onclick="refreshPage()" class="btn btn-outline-primary">
+                        <i class="fas fa-sync-alt me-2"></i>刷新
                     </button>
-                    <a href="{{ url_for('qr_codes') }}" class="btn btn-sm btn-outline-secondary">
-                        <i class="fas fa-qrcode"></i>
+                    <a href="{{ url_for('qr_codes') }}" class="btn btn-outline-success">
+                        <i class="fas fa-qrcode me-2"></i>二维码
                     </a>
                 </div>
             </div>
 
             {% if packages %}
             <!-- 搜索框 -->
-            <div class="mb-3">
-                <input type="text" id="searchInput" class="form-control" placeholder="搜索客户姓名或取件码..." onkeyup="filterPackages()">
+            <div class="mb-4">
+                <div class="input-group">
+                    <span class="input-group-text">
+                        <i class="fas fa-search"></i>
+                    </span>
+                    <input type="text" id="searchInput" class="form-control" placeholder="搜索客户姓名或取件码..." onkeyup="filterPackages()">
+                </div>
             </div>
 
             <!-- 包裹卡片 -->
             <div class="row" id="packagesContainer">
                 {% for package in packages %}
-                <div class="col-12 mb-3 package-card" data-name="{{ package.customer_name.lower() }}" data-code="{{ package.pickup_code }}">
-                    <div class="card border-primary">
-                        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                <div class="col-12 mb-4 package-card fade-in-up" data-name="{{ package.customer_name.lower() }}" data-code="{{ package.pickup_code }}">
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
                             <h6 class="mb-0">
-                                <i class="fas fa-user me-1"></i>{{ package.customer_name }}
+                                <i class="fas fa-user me-2 text-primary"></i>{{ package.customer_name }}
                             </h6>
-                            <span class="badge bg-light text-dark">{{ loop.index }}</span>
+                            <span class="badge bg-primary">{{ loop.index }}</span>
                         </div>
                         <div class="card-body">
                             <!-- 取件码 -->
-                            <div class="text-center mb-3">
-                                <div class="alert alert-success mb-2">
-                                    <h2 class="mb-0 text-success">{{ package.pickup_code }}</h2>
-                                    <small>取件码</small>
+                            <div class="text-center mb-4">
+                                <div class="alert alert-success mb-0">
+                                    <h1 class="display-4 fw-bold text-success mb-1">{{ package.pickup_code }}</h1>
+                                    <small class="text-muted">取件码</small>
                                 </div>
                             </div>
 
@@ -50,20 +60,35 @@
                                     <p class="mb-1"><strong>深圳单号:</strong></p>
                                     <p class="text-muted small">{{ package.shenzhen_tracking_number }}</p>
                                 </div>
+                                {% if package.cafe_arrival_date_paris %}
                                 <div class="col-6">
                                     <p class="mb-1"><strong>到达时间:</strong></p>
-                                    <p class="text-muted small">{{ package.cafe_arrival_date.strftime('%m-%d %H:%M') }}</p>
+                                    <p class="text-muted small">{{ package.cafe_arrival_date_paris.strftime('%m-%d %H:%M') }}</p>
                                 </div>
+                                {% endif %}
+                                {% if package.latest_pickup_time_paris %}
+                                <div class="col-6">
+                                    <p class="mb-1"><strong>最晚取件:</strong></p>
+                                    <p class="text-muted small {% if package.is_overdue %}text-danger{% endif %}">
+                                        {{ package.latest_pickup_time_paris.strftime('%m-%d %H:%M') }}
+                                        {% if package.is_overdue %}
+                                        <span class="badge bg-danger">已逾期</span>
+                                        {% endif %}
+                                    </p>
+                                </div>
+                                {% endif %}
                             </div>
 
                             <!-- 操作按钮 -->
-                            <div class="text-center mt-3">
-                                <button onclick="copyPickupCode('{{ package.pickup_code }}')" class="btn btn-success btn-sm">
-                                    <i class="fas fa-copy me-1"></i>复制取件码
-                                </button>
-                                <button onclick="markAsPicked({{ package.id }})" class="btn btn-primary btn-sm">
-                                    <i class="fas fa-check me-1"></i>标记已取件
-                                </button>
+                            <div class="text-center mt-4">
+                                <div class="btn-group" role="group">
+                                    <button onclick="copyPickupCode('{{ package.pickup_code }}')" class="btn btn-success">
+                                        <i class="fas fa-copy me-2"></i>复制取件码
+                                    </button>
+                                    <button onclick="markAsPicked({{ package.id }})" class="btn btn-primary">
+                                        <i class="fas fa-check me-2"></i>标记已取件
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -72,25 +97,29 @@
             </div>
 
             <!-- 统计信息 -->
-            <div class="card mt-3">
+            <div class="card mt-4 fade-in-up">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="fas fa-chart-bar me-2 text-info"></i>统计信息
+                    </h6>
+                </div>
                 <div class="card-body text-center">
-                    <h6>统计信息</h6>
                     <div class="row">
                         <div class="col-4">
                             <div class="text-primary">
-                                <h4>{{ packages|length }}</h4>
-                                <small>待取件</small>
+                                <h3 class="fw-bold">{{ packages|length }}</h3>
+                                <small class="text-muted">待取件</small>
                             </div>
                         </div>
                         <div class="col-4">
                             <div class="text-success">
-                                <h4>{{ packages|length }}</h4>
+                                <h3 class="fw-bold">{{ packages|length }}</h3>
                                 <small>今日到达</small>
                             </div>
                         </div>
                         <div class="col-4">
                             <div class="text-info">
-                                <h4>{{ packages[0].cafe_arrival_date.strftime('%H:%M') if packages else '--' }}</h4>
+                                <h4>{{ packages[0].cafe_arrival_date_paris.strftime('%H:%M') if packages and packages[0].cafe_arrival_date_paris else '--' }}</h4>
                                 <small>最新到达</small>
                             </div>
                         </div>
@@ -100,113 +129,60 @@
 
             {% else %}
             <div class="text-center py-5">
-                <i class="fas fa-box-open fa-3x text-muted mb-3"></i>
-                <h5 class="text-muted">暂无待取件包裹</h5>
+                <i class="fas fa-box fa-3x text-muted mb-3"></i>
+                <h4 class="text-muted">暂无待取件的包裹</h4>
                 <p class="text-muted">当有包裹到达咖啡馆后，这里会显示取件码</p>
+                <button onclick="refreshPage()" class="btn btn-primary">
+                    <i class="fas fa-sync-alt me-1"></i>刷新页面
+                </button>
             </div>
             {% endif %}
         </div>
     </div>
 </div>
 
-<!-- 取件码复制提示 -->
-<div class="toast-container position-fixed bottom-0 end-0 p-3">
-    <div id="copyToast" class="toast" role="alert">
-        <div class="toast-header">
-            <i class="fas fa-check-circle text-success me-2"></i>
-            <strong class="me-auto">复制成功</strong>
-            <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
-        </div>
-        <div class="toast-body">
-            取件码已复制到剪贴板
-        </div>
-    </div>
-</div>
-{% endblock %}
-
-{% block scripts %}
 <script>
-// 搜索过滤功能
-function filterPackages() {
-    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-    const packages = document.querySelectorAll('.package-card');
-    
-    packages.forEach(package => {
-        const name = package.getAttribute('data-name');
-        const code = package.getAttribute('data-code');
-        
-        if (name.includes(searchTerm) || code.includes(searchTerm)) {
-            package.style.display = 'block';
-        } else {
-            package.style.display = 'none';
-        }
-    });
-}
-
-// 复制取件码
-function copyPickupCode(code) {
-    navigator.clipboard.writeText(code).then(() => {
-        const toast = new bootstrap.Toast(document.getElementById('copyToast'));
-        toast.show();
-    }).catch(err => {
-        console.error('复制失败:', err);
-        alert('复制失败，请手动复制取件码: ' + code);
-    });
-}
-
-// 标记已取件
-function markAsPicked(packageId) {
-    if (confirm('确认标记为已取件？')) {
-        // 这里可以添加AJAX请求来更新状态
-        alert('功能开发中，请到电脑端操作');
-    }
-}
-
-// 刷新页面
 function refreshPage() {
     location.reload();
 }
 
-// 自动刷新（每30秒）
-setInterval(refreshPage, 30000);
+function filterPackages() {
+    const input = document.getElementById('searchInput');
+    const filter = input.value.toLowerCase();
+    const cards = document.querySelectorAll('.package-card');
+    
+    cards.forEach(card => {
+        const name = card.dataset.name;
+        const code = card.dataset.code;
+        
+        if (name.includes(filter) || code.includes(filter)) {
+            card.style.display = 'block';
+        } else {
+            card.style.display = 'none';
+        }
+    });
+}
+
+function copyPickupCode(code) {
+    navigator.clipboard.writeText(code).then(() => {
+        alert('取件码已复制到剪贴板: ' + code);
+    }).catch(() => {
+        // 如果剪贴板API不可用，使用传统方法
+        const textArea = document.createElement('textarea');
+        textArea.value = code;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+        alert('取件码已复制到剪贴板: ' + code);
+    });
+}
+
+function markAsPicked(packageId) {
+    if (confirm('确认标记为已取件？')) {
+        // 这里可以添加AJAX请求来更新状态
+        alert('功能开发中...');
+    }
+}
 </script>
-
-<style>
-/* 移动端优化样式 */
-@media (max-width: 768px) {
-    .container-fluid {
-        padding: 10px;
-    }
-    
-    .card {
-        margin-bottom: 15px;
-    }
-    
-    .btn {
-        font-size: 14px;
-        padding: 8px 12px;
-    }
-    
-    h2 {
-        font-size: 2rem;
-    }
-    
-    .alert {
-        padding: 15px;
-    }
-}
-
-/* 取件码高亮 */
-.alert-success h2 {
-    font-weight: bold;
-    letter-spacing: 2px;
-}
-
-/* 卡片悬停效果 */
-.card:hover {
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-    transform: translateY(-2px);
-    transition: all 0.3s ease;
-}
-</style>
 {% endblock %} 

@@ -128,7 +128,7 @@
                     </div>
                     <div class="package-row">
                         <div class="package-label">到达时间:</div>
-                        <div class="package-value">{{ package.shenzhen_arrival_date.strftime('%Y年%m月%d日 %H:%M') }}</div>
+                        <div class="package-value">{{ package.shenzhen_arrival_date|format_datetime }}</div>
                     </div>
                     <div class="package-row">
                         <div class="package-label">当前状态:</div>
@@ -164,7 +164,7 @@
             <p>此邮件由集运系统自动发送，请勿回复此邮件。</p>
             <p>如有疑问，请联系我们的客服团队。</p>
             <p style="margin-top: 15px; font-size: 12px; color: #999;">
-                © 2024 集运服务. 保留所有权利.
+                © 2025 NÜNA LINKS 集运中心. 保留所有权利.
             </p>
         </div>
     </div>

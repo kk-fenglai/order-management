@@ -26,5 +26,5 @@ if __name__ == '__main__':
         db.create_all()
         print("✅ 数据库初始化完成")
     
-    # 运行应用
-    app.run(debug=True, host='0.0.0.0', port=5000) 
+    # 运行应用 - 禁用自动重载以避免watchdog问题
+    app.run(debug=True, host='0.0.0.0', port=5000, use_reloader=False) 

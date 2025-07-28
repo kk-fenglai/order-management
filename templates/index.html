@@ -6,17 +6,22 @@
 <!-- 顶部操作区域 -->
 <div class="row mb-4">
     <div class="col-12">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <h2><i class="fas fa-shipping-fast me-2"></i>集运管理系统</h2>
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div class="fade-in-up">
+                <h1 class="display-5 fw-bold text-gradient mb-2">
+                    <i class="fas fa-shipping-fast me-3"></i>集运管理系统
+                </h1>
+                <p class="text-muted fs-5">高效、简洁的包裹管理解决方案</p>
+            </div>
             <div class="btn-group" role="group">
                 <a href="{{ url_for('new_package') }}" class="btn btn-primary">
-                    <i class="fas fa-plus me-1"></i>新建包裹
+                    <i class="fas fa-plus me-2"></i>新建包裹
                 </a>
                 <a href="{{ url_for('qr_codes') }}" class="btn btn-success">
-                    <i class="fas fa-qrcode me-1"></i>二维码
+                    <i class="fas fa-qrcode me-2"></i>二维码
                 </a>
-                <a href="{{ url_for('stats') }}" class="btn btn-info">
-                    <i class="fas fa-chart-bar me-1"></i>统计
+                <a href="{{ url_for('stats') }}" class="btn btn-outline-primary">
+                    <i class="fas fa-chart-bar me-2"></i>统计
                 </a>
             </div>
         </div>
@@ -26,23 +31,28 @@
 <!-- 快速操作卡片 -->
 <div class="row mb-4">
     <div class="col-md-6">
-        <div class="card border-primary">
-            <div class="card-header bg-primary text-white">
-                <h5 class="mb-0"><i class="fas fa-file-excel me-2"></i>批量导入包裹</h5>
+        <div class="card fade-in-up">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-file-excel me-2 text-success"></i>批量导入包裹
+                </h5>
             </div>
             <div class="card-body">
                 <form method="post" enctype="multipart/form-data">
                     <div class="mb-3">
-                        <label for="excelFile" class="form-label">选择Excel文件（.xlsx）</label>
+                        <label for="excelFile" class="form-label">
+                            <i class="fas fa-file-upload me-1"></i>选择Excel文件（.xlsx）
+                        </label>
                         <input type="file" class="form-control" id="excelFile" name="excel_file" accept=".xlsx" required>
-                        <div class="form-text">
-                            请使用<a href="/import_template.xlsx" download class="text-decoration-none">
+                        <div class="form-text text-muted">
+                            <i class="fas fa-info-circle me-1"></i>请使用
+                            <a href="/import_template.xlsx" download class="text-decoration-none text-success">
                                 <i class="fas fa-download me-1"></i>导入模板
                             </a>，支持客户名称、快递单号、客户邮箱、备注
                         </div>
                     </div>
                     <button type="submit" class="btn btn-success w-100">
-                        <i class="fas fa-upload me-1"></i>上传并导入
+                        <i class="fas fa-upload me-2"></i>上传并导入
                     </button>
                 </form>
                 
@@ -80,30 +90,32 @@
     </div>
     
     <div class="col-md-6">
-        <div class="card border-success">
-            <div class="card-header bg-success text-white">
-                <h5 class="mb-0"><i class="fas fa-tools me-2"></i>快捷功能</h5>
+        <div class="card fade-in-up">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-tools me-2 text-primary"></i>快捷功能
+                </h5>
             </div>
             <div class="card-body">
-                <div class="row g-2">
+                <div class="row g-3">
                     <div class="col-6">
                         <a href="{{ url_for('mobile_pickup') }}" class="btn btn-outline-success w-100">
-                            <i class="fas fa-mobile-alt me-1"></i>移动取件
+                            <i class="fas fa-mobile-alt me-2"></i>移动取件
                         </a>
                     </div>
                     <div class="col-6">
-                        <a href="{{ url_for('pickup_cards') }}" class="btn btn-outline-info w-100">
-                            <i class="fas fa-print me-1"></i>打印卡片
+                        <a href="{{ url_for('pickup_cards') }}" class="btn btn-outline-primary w-100">
+                            <i class="fas fa-print me-2"></i>打印卡片
                         </a>
                     </div>
                     <div class="col-6">
                         <a href="{{ url_for('qr_codes') }}" class="btn btn-outline-warning w-100">
-                            <i class="fas fa-qrcode me-1"></i>二维码
+                            <i class="fas fa-qrcode me-2"></i>二维码
                         </a>
                     </div>
                     <div class="col-6">
-                        <a href="{{ url_for('stats') }}" class="btn btn-outline-primary w-100">
-                            <i class="fas fa-chart-bar me-1"></i>数据统计
+                        <a href="{{ url_for('stats') }}" class="btn btn-outline-info w-100">
+                            <i class="fas fa-chart-bar me-2"></i>数据统计
                         </a>
                     </div>
                 </div>
@@ -134,12 +146,14 @@
 <!-- 邮件管理区域 -->
 <div class="row mb-4">
     <div class="col-12">
-        <div class="card border-warning">
-            <div class="card-header bg-warning text-dark">
-                <h5 class="mb-0"><i class="fas fa-envelope me-2"></i>邮件管理</h5>
+        <div class="card fade-in-up">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-envelope me-2 text-warning"></i>邮件管理
+                </h5>
             </div>
             <div class="card-body">
-                <div class="row">
+                <div class="row g-3">
                     <div class="col-md-6">
                         <div class="d-grid">
                             <form method="post" action="{{ url_for('send_shenzhen_emails') }}" class="d-inline">
@@ -248,9 +262,11 @@
 <!-- 包裹列表 -->
 <div class="row">
     <div class="col-12">
-        <div class="card">
-            <div class="card-header bg-light">
-                <h5 class="mb-0"><i class="fas fa-list me-2"></i>包裹列表</h5>
+        <div class="card fade-in-up">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-list me-2 text-primary"></i>包裹列表
+                </h5>
             </div>
             <div class="card-body p-0">
                 {% if packages %}
@@ -276,15 +292,15 @@
                                 <td>{{ package.customer_name }}</td>
                                 <td>{{ package.customer_email }}</td>
                                 <td>
-                                    {% if package.latest_pickup_time %}
+                                    {% if package.latest_pickup_time_paris %}
                                         {% if package.is_overdue %}
                                             <span class="text-danger fw-bold">
                                                 <i class="fas fa-exclamation-triangle me-1"></i>
-                                                {{ package.latest_pickup_time.strftime('%m-%d %H:%M') }}
+                                                {{ package.latest_pickup_time_paris.strftime('%m-%d %H:%M') }}
                                             </span>
                                         {% else %}
                                             <span class="text-muted">
-                                                {{ package.latest_pickup_time.strftime('%m-%d %H:%M') }}
+                                                {{ package.latest_pickup_time_paris.strftime('%m-%d %H:%M') }}
                                             </span>
                                         {% endif %}
                                     {% else %}

@@ -2,6 +2,7 @@ from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime, timedelta
 import random
 import string
+import pytz
 
 db = SQLAlchemy()
 
@@ -28,12 +29,26 @@ class Package(db.Model):
     @staticmethod
     def generate_pickup_code():
         """生成唯一的取件码"""
-        while True:
+        max_attempts = 100  # 防止无限循环
+        attempts = 0
+        
+        while attempts < max_attempts:
             # 生成6位数字取件码
             pickup_code = ''.join(random.choices(string.digits, k=6))
-            # 检查是否已存在
-            if not Package.query.filter_by(pickup_code=pickup_code).first():
-                return pickup_code
+            
+            try:
+                # 检查是否已存在
+                if not Package.query.filter_by(pickup_code=pickup_code).first():
+                    return pickup_code
+            except Exception as e:
+                # 如果查询失败，记录错误并继续尝试
+                import logging
+                logging.error(f"检查取件码唯一性时出错: {e}")
+            
+            attempts += 1
+        
+        # 如果尝试次数过多，抛出异常
+        raise ValueError("无法生成唯一的取件码，请重试") 
 
     def to_dict(self):
         """转换为字典格式"""
@@ -50,8 +65,8 @@ class Package(db.Model):
             'shenzhen_email_sent': self.shenzhen_email_sent,
             'cafe_email_sent': self.cafe_email_sent,
             'notes': self.notes,
-            'created_at': self.created_at.isoformat(),
-            'updated_at': self.updated_at.isoformat()
+            'latest_pickup_time': self.latest_pickup_time_paris.isoformat() if self.latest_pickup_time_paris else None,
+            'is_overdue': self.is_overdue
         }
 
     @property
@@ -86,4 +101,29 @@ class Package(db.Model):
         """检查是否超过最晚取货时间"""
         if self.status == 'cafe_arrived' and self.latest_pickup_time:
             return datetime.utcnow() > self.latest_pickup_time
-        return False 
+        return False
+    
+    def to_paris_time(self, dt):
+        """转换为巴黎时间"""
+        if dt is None:
+            return None
+        utc_tz = pytz.UTC
+        paris_tz = pytz.timezone('Europe/Paris')
+        if dt.tzinfo is None:
+            dt = utc_tz.localize(dt)
+        return dt.astimezone(paris_tz)
+    
+    @property
+    def cafe_arrival_date_paris(self):
+        """咖啡馆到达时间（巴黎时间）"""
+        return self.to_paris_time(self.cafe_arrival_date)
+    
+    @property
+    def latest_pickup_time_paris(self):
+        """最晚取件时间（巴黎时间）"""
+        return self.to_paris_time(self.latest_pickup_time)
+    
+    @property
+    def pickup_date_paris(self):
+        """取件时间（巴黎时间）"""
+        return self.to_paris_time(self.pickup_date) 

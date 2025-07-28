@@ -35,15 +35,19 @@ def send_shenzhen_arrival_email(package, mail):
         
         mail.send(msg)
         
-        # 更新邮件发送状态
-        package.shenzhen_email_sent = True
-        package.updated_at = datetime.utcnow()
+        # 更新邮件发送状态 - 在应用上下文中执行
+        with mail.app.app_context():
+            from models import db
+            # 重新查询包裹以确保数据是最新的
+            updated_package = db.session.get(package.__class__, package.id)
+            if updated_package:
+                updated_package.shenzhen_email_sent = True
+                updated_package.updated_at = datetime.utcnow()
+                db.session.commit()
+                logger.info(f"深圳到达邮件发送成功并更新状态: {package.customer_email}")
+            else:
+                logger.warning(f"包裹不存在，无法更新状态: {package.id}")
         
-        # 提交数据库更改
-        from models import db
-        db.session.commit()
-        
-        logger.info(f"深圳到达邮件发送成功: {package.customer_email}")
         return True
     except Exception as e:
         logger.error(f"发送深圳到达邮件失败: {e}")
@@ -65,15 +69,19 @@ def send_cafe_arrival_email(package, mail):
         
         mail.send(msg)
         
-        # 更新邮件发送状态
-        package.cafe_email_sent = True
-        package.updated_at = datetime.utcnow()
+        # 更新邮件发送状态 - 在应用上下文中执行
+        with mail.app.app_context():
+            from models import db
+            # 重新查询包裹以确保数据是最新的
+            updated_package = db.session.get(package.__class__, package.id)
+            if updated_package:
+                updated_package.cafe_email_sent = True
+                updated_package.updated_at = datetime.utcnow()
+                db.session.commit()
+                logger.info(f"咖啡馆到达邮件发送成功并更新状态: {package.customer_email}")
+            else:
+                logger.warning(f"包裹不存在，无法更新状态: {package.id}")
         
-        # 提交数据库更改
-        from models import db
-        db.session.commit()
-        
-        logger.info(f"咖啡馆到达邮件发送成功: {package.customer_email}")
         return True
     except Exception as e:
         logger.error(f"发送咖啡馆到达邮件失败: {e}")
@@ -83,8 +91,10 @@ def generate_pickup_codes_qr(packages):
     """生成批量二维码，内容为移动端取件码页面网址，便于微信扫码跳转"""
     if not packages:
         return None, None
-    # 你的服务器局域网地址（如有变动请手动修改）
-    url = "http://192.168.43.40:5000/mobile_pickup"
+    # 从配置中获取服务器地址
+    from flask import current_app
+    base_url = current_app.config.get('BASE_URL', 'http://localhost:5000')
+    url = f"{base_url}/mobile_pickup"
     # 生成二维码
     qr = qrcode.QRCode(
         version=1,
