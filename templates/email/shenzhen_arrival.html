@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>包裹到达深圳仓库 - 快递单号: {{ package.shenzhen_tracking_number }}</title>
+    <style>
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f8f9fa;
+        }
+        .email-container {
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #007bff, #0056b3);
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: bold;
+        }
+        .content {
+            padding: 30px 20px;
+        }
+        .package-info {
+            background-color: #f8f9fa;
+            border-radius: 6px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .package-details {
+            display: table;
+            width: 100%;
+            margin: 15px 0;
+        }
+        .package-row {
+            display: table-row;
+        }
+        .package-label {
+            display: table-cell;
+            font-weight: bold;
+            padding: 8px 0;
+            width: 120px;
+            color: #555;
+        }
+        .package-value {
+            display: table-cell;
+            padding: 8px 0;
+        }
+        .tracking-number {
+            background-color: #cce5ff;
+            border: 2px solid #007bff;
+            border-radius: 6px;
+            padding: 15px;
+            margin: 15px 0;
+            text-align: center;
+        }
+        .tracking-number h4 {
+            color: #004085;
+            margin: 0 0 10px 0;
+        }
+        .tracking-number .number {
+            font-size: 20px;
+            font-weight: bold;
+            color: #007bff;
+            letter-spacing: 1px;
+        }
+        .footer {
+            background-color: #f8f9fa;
+            padding: 20px;
+            text-align: center;
+            color: #666;
+            font-size: 14px;
+        }
+        .contact-info {
+            background-color: #e9ecef;
+            border-radius: 6px;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        .contact-info h4 {
+            margin: 0 0 10px 0;
+            color: #495057;
+        }
+        .contact-info p {
+            margin: 5px 0;
+            color: #6c757d;
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <div class="header">
+            <h1>📦 包裹到达深圳仓库</h1>
+            <p>您的包裹已安全到达我们的深圳仓库！</p>
+        </div>
+        
+        <div class="content">
+            <p>尊敬的 <strong>{{ package.customer_name }}</strong>，</p>
+            
+            <p>我们很高兴地通知您，您的包裹已经安全到达我们的深圳仓库，正在等待转运到法国。</p>
+            
+            <div class="tracking-number">
+                <h4>📋 深圳仓库快递单号</h4>
+                <div class="number">{{ package.shenzhen_tracking_number }}</div>
+                <p style="margin: 10px 0 0 0; color: #004085;">请妥善保管此快递单号</p>
+            </div>
+            
+            <div class="package-info">
+                <h3 style="margin-top: 0; color: #007bff;">包裹信息</h3>
+                
+                <div class="package-details">
+                    <div class="package-row">
+                        <div class="package-label">客户姓名:</div>
+                        <div class="package-value">{{ package.customer_name }}</div>
+                    </div>
+                    <div class="package-row">
+                        <div class="package-label">到达时间:</div>
+                        <div class="package-value">{{ package.shenzhen_arrival_date.strftime('%Y年%m月%d日 %H:%M') }}</div>
+                    </div>
+                    <div class="package-row">
+                        <div class="package-label">当前状态:</div>
+                        <div class="package-value">
+                            <span style="color: #007bff; font-weight: bold;">已到达深圳仓库</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="contact-info">
+                <h4>📞 联系我们</h4>
+                <p><strong>客服电话:</strong> 400-123-4567</p>
+                <p><strong>客服邮箱:</strong> service@yourcompany.com</p>
+                <p><strong>工作时间:</strong> 周一至周五 9:00-18:00</p>
+            </div>
+            
+            <p><strong>后续流程:</strong></p>
+            <ul>
+                <li>您的包裹将在深圳仓库进行整理和打包</li>
+                <li>我们将安排转运到法国</li>
+                <li>包裹到达法国咖啡馆后，您将收到取件码通知</li>
+                <li>请携带取件码到咖啡馆取件</li>
+            </ul>
+            
+            <p>感谢您选择我们的集运服务！</p>
+            
+            <p>如有任何问题，请随时联系我们。<br>
+            <strong>集运服务团队</strong></p>
+        </div>
+        
+        <div class="footer">
+            <p>此邮件由集运系统自动发送，请勿回复此邮件。</p>
+            <p>如有疑问，请联系我们的客服团队。</p>
+            <p style="margin-top: 15px; font-size: 12px; color: #999;">
+                © 2024 集运服务. 保留所有权利.
+            </p>
+        </div>
+    </div>
+</body>
+</html> 

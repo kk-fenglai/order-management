@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+
+{% block title %}新建集运包裹 - 集运系统{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title mb-0">
+                    <i class="fas fa-shipping-fast me-2"></i>新建集运包裹
+                </h3>
+            </div>
+            <div class="card-body">
+                <form method="POST" id="packageForm">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="customer_name" class="form-label">
+                                <i class="fas fa-user me-1"></i>客户姓名 <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" class="form-control" id="customer_name" name="customer_name" 
+                                   required placeholder="请输入客户姓名">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="customer_email" class="form-label">
+                                <i class="fas fa-envelope me-1"></i>客户邮箱 <span class="text-danger">*</span>
+                            </label>
+                            <input type="email" class="form-control" id="customer_email" name="customer_email" 
+                                   required placeholder="请输入客户邮箱">
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="shenzhen_tracking_number" class="form-label">
+                            <i class="fas fa-barcode me-1"></i>深圳仓库快递单号 <span class="text-danger">*</span>
+                        </label>
+                        <input type="text" class="form-control" id="shenzhen_tracking_number" name="shenzhen_tracking_number" 
+                               required placeholder="请输入深圳仓库快递单号">
+                        <small class="form-text text-muted">客户寄到深圳仓库的快递单号</small>
+                    </div>
+
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>系统将自动生成6位随机咖啡馆取件码</strong><br>
+                        创建记录后，系统会自动发送深圳到达通知邮件给客户，告知快递单号。
+                    </div>
+
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>后续操作</strong><br>
+                        当包裹到达咖啡馆时，请在包裹详情页面点击"标记到达咖啡馆"按钮，系统将发送取件码通知邮件。
+                    </div>
+
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ url_for('index') }}" class="btn btn-secondary me-md-2">
+                            <i class="fas fa-times me-1"></i>取消
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-1"></i>创建包裹记录并发送深圳到达通知
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// 表单验证
+document.getElementById('packageForm').addEventListener('submit', function(e) {
+    const email = document.getElementById('customer_email').value;
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    
+    if (!emailRegex.test(email)) {
+        e.preventDefault();
+        alert('请输入有效的邮箱地址');
+        return false;
+    }
+    
+    const customerName = document.getElementById('customer_name').value.trim();
+    const shenzhenTrackingNumber = document.getElementById('shenzhen_tracking_number').value.trim();
+    
+    if (customerName.length < 2) {
+        e.preventDefault();
+        alert('客户姓名至少需要2个字符');
+        return false;
+    }
+    
+    if (shenzhenTrackingNumber.length < 5) {
+        e.preventDefault();
+        alert('深圳仓库快递单号至少需要5个字符');
+        return false;
+    }
+});
+</script>
+{% endblock %} 

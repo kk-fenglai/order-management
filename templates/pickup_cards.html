@@ -1,0 +1,175 @@
+{% extends "base.html" %}
+
+{% block title %}取件码卡片 - 集运系统{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2><i class="fas fa-id-card me-2"></i>取件码卡片</h2>
+            <div>
+                <button onclick="printAllCards()" class="btn btn-primary">
+                    <i class="fas fa-print me-1"></i>打印所有卡片
+                </button>
+                <a href="{{ url_for('index') }}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-1"></i>返回列表
+                </a>
+            </div>
+        </div>
+
+        {% if packages %}
+        <div class="row" id="pickupCards">
+            {% for package in packages %}
+            <div class="col-md-4 mb-4">
+                <div class="card pickup-card border-primary" style="min-height: 200px;">
+                    <div class="card-header bg-primary text-white text-center">
+                        <h5 class="mb-0">
+                            <i class="fas fa-box me-1"></i>取件码卡片
+                        </h5>
+                    </div>
+                    <div class="card-body text-center">
+                        <!-- 取件码 -->
+                        <div class="mb-3">
+                            <h1 class="text-primary fw-bold">{{ package.pickup_code }}</h1>
+                            <small class="text-muted">取件码</small>
+                        </div>
+                        
+                        <!-- 客户信息 -->
+                        <div class="mb-3">
+                            <h6 class="mb-1">{{ package.customer_name }}</h6>
+                            <small class="text-muted">客户姓名</small>
+                        </div>
+                        
+                        <!-- 包裹信息 -->
+                        <div class="text-start small">
+                            <p class="mb-1"><strong>深圳单号:</strong> {{ package.shenzhen_tracking_number }}</p>
+                            <p class="mb-1"><strong>到达时间:</strong> {{ package.cafe_arrival_date.strftime('%m-%d %H:%M') }}</p>
+                            <p class="mb-0"><strong>生成时间:</strong> {{ package.created_at.strftime('%m-%d %H:%M') }}</p>
+                        </div>
+                    </div>
+                    <div class="card-footer text-center">
+                        <button onclick="printSingleCard({{ package.id }})" class="btn btn-sm btn-outline-primary">
+                            <i class="fas fa-print me-1"></i>打印此卡片
+                        </button>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- 批量打印说明 -->
+        <div class="card mt-4">
+            <div class="card-body">
+                <h5><i class="fas fa-info-circle me-2"></i>使用说明</h5>
+                <ul class="mb-0">
+                    <li>每个卡片包含一个包裹的取件码和基本信息</li>
+                    <li>可以单独打印某个卡片，也可以批量打印所有卡片</li>
+                    <li>建议使用A4纸张打印，每页可放置多个卡片</li>
+                    <li>打印时请选择"无边距"或"最小边距"以获得最佳效果</li>
+                </ul>
+            </div>
+        </div>
+
+        {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-id-card fa-3x text-muted mb-3"></i>
+            <h4 class="text-muted">暂无待取件包裹</h4>
+            <p class="text-muted">当有包裹到达咖啡馆后，这里会显示取件码卡片</p>
+            <a href="{{ url_for('index') }}" class="btn btn-primary">
+                <i class="fas fa-arrow-left me-1"></i>返回包裹列表
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- 打印样式 -->
+<style media="print">
+    .btn, .navbar, footer { display: none !important; }
+    .pickup-card { 
+        border: 2px solid #000 !important; 
+        page-break-inside: avoid;
+        margin-bottom: 10px !important;
+    }
+    .card-header { 
+        background-color: #000 !important; 
+        color: #fff !important; 
+    }
+    .text-primary { color: #000 !important; }
+    .text-muted { color: #666 !important; }
+    h1 { font-size: 2.5rem !important; }
+    h5 { font-size: 1.2rem !important; }
+    h6 { font-size: 1rem !important; }
+    .small { font-size: 0.8rem !important; }
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// 打印单个卡片
+function printSingleCard(packageId) {
+    const card = document.querySelector(`[onclick="printSingleCard(${packageId})"]`).closest('.pickup-card');
+    const printWindow = window.open('', '_blank');
+    
+    printWindow.document.write(`
+        <html>
+        <head>
+            <title>取件码卡片</title>
+            <style>
+                body { 
+                    font-family: Arial, sans-serif; 
+                    margin: 20px; 
+                    text-align: center;
+                }
+                .card { 
+                    border: 2px solid #000; 
+                    max-width: 300px; 
+                    margin: 0 auto;
+                    padding: 20px;
+                }
+                .header { 
+                    background-color: #000; 
+                    color: #fff; 
+                    padding: 10px;
+                    margin: -20px -20px 20px -20px;
+                }
+                .pickup-code { 
+                    font-size: 3rem; 
+                    font-weight: bold; 
+                    margin: 20px 0;
+                }
+                .info { 
+                    text-align: left; 
+                    margin: 15px 0;
+                }
+                .info p { 
+                    margin: 5px 0; 
+                    font-size: 0.9rem;
+                }
+            </style>
+        </head>
+        <body>
+            <div class="card">
+                <div class="header">
+                    <h3>取件码卡片</h3>
+                </div>
+                <div class="pickup-code">${card.querySelector('h1').textContent}</div>
+                <div class="info">
+                    <p><strong>客户:</strong> ${card.querySelector('h6').textContent}</p>
+                    <p><strong>深圳单号:</strong> ${card.querySelector('.text-start p:nth-child(1)').textContent.replace('深圳单号:', '').trim()}</p>
+                    <p><strong>到达时间:</strong> ${card.querySelector('.text-start p:nth-child(2)').textContent.replace('到达时间:', '').trim()}</p>
+                </div>
+            </div>
+        </body>
+        </html>
+    `);
+    printWindow.document.close();
+    printWindow.print();
+}
+
+// 打印所有卡片
+function printAllCards() {
+    window.print();
+}
+</script>
+{% endblock %} 

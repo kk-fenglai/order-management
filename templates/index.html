@@ -1,0 +1,490 @@
+{% extends "base.html" %}
+
+{% block title %}集运管理系统 - 首页{% endblock %}
+
+{% block content %}
+<!-- 顶部操作区域 -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h2><i class="fas fa-shipping-fast me-2"></i>集运管理系统</h2>
+            <div class="btn-group" role="group">
+                <a href="{{ url_for('new_package') }}" class="btn btn-primary">
+                    <i class="fas fa-plus me-1"></i>新建包裹
+                </a>
+                <a href="{{ url_for('qr_codes') }}" class="btn btn-success">
+                    <i class="fas fa-qrcode me-1"></i>二维码
+                </a>
+                <a href="{{ url_for('stats') }}" class="btn btn-info">
+                    <i class="fas fa-chart-bar me-1"></i>统计
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 快速操作卡片 -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card border-primary">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-file-excel me-2"></i>批量导入包裹</h5>
+            </div>
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label for="excelFile" class="form-label">选择Excel文件（.xlsx）</label>
+                        <input type="file" class="form-control" id="excelFile" name="excel_file" accept=".xlsx" required>
+                        <div class="form-text">
+                            请使用<a href="/import_template.xlsx" download class="text-decoration-none">
+                                <i class="fas fa-download me-1"></i>导入模板
+                            </a>，支持客户名称、快递单号、客户邮箱、备注
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-success w-100">
+                        <i class="fas fa-upload me-1"></i>上传并导入
+                    </button>
+                </form>
+                
+                {% if import_result %}
+                <div class="mt-3">
+                    {% if import_result.success %}
+                    <div class="alert alert-success">
+                        <i class="fas fa-check-circle me-1"></i>
+                        共导入 {{ import_result.count }} 条数据。
+                        {% if import_result.skipped_count > 0 %}
+                        <br><span class="text-warning">
+                            <i class="fas fa-exclamation-triangle me-1"></i>
+                            跳过 {{ import_result.skipped_count }} 条重复数据。
+                        </span>
+                        {% endif %}
+                    </div>
+                    {% if import_result.count > 0 %}
+                    <form method="post" action="{{ url_for('import_excel_send') }}" class="d-inline">
+                        <input type="hidden" name="import_ids" value="{{ import_result.ids|join(',') }}">
+                        <button type="submit" class="btn btn-primary btn-sm">
+                            <i class="fas fa-paper-plane me-1"></i>一键群发邮件
+                        </button>
+                    </form>
+                    {% endif %}
+                    {% else %}
+                    <div class="alert alert-danger">
+                        <i class="fas fa-times-circle me-1"></i>
+                        {{ import_result.error }}
+                    </div>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card border-success">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0"><i class="fas fa-tools me-2"></i>快捷功能</h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-2">
+                    <div class="col-6">
+                        <a href="{{ url_for('mobile_pickup') }}" class="btn btn-outline-success w-100">
+                            <i class="fas fa-mobile-alt me-1"></i>移动取件
+                        </a>
+                    </div>
+                    <div class="col-6">
+                        <a href="{{ url_for('pickup_cards') }}" class="btn btn-outline-info w-100">
+                            <i class="fas fa-print me-1"></i>打印卡片
+                        </a>
+                    </div>
+                    <div class="col-6">
+                        <a href="{{ url_for('qr_codes') }}" class="btn btn-outline-warning w-100">
+                            <i class="fas fa-qrcode me-1"></i>二维码
+                        </a>
+                    </div>
+                    <div class="col-6">
+                        <a href="{{ url_for('stats') }}" class="btn btn-outline-primary w-100">
+                            <i class="fas fa-chart-bar me-1"></i>数据统计
+                        </a>
+                    </div>
+                </div>
+                
+                <!-- 数据管理 -->
+                <div class="border-top pt-3 mt-3">
+                    <h6 class="text-muted mb-2"><i class="fas fa-database me-1"></i>数据管理</h6>
+                    
+                    <!-- 批量删除功能 -->
+                    <div class="mb-2">
+                        <button type="button" class="btn btn-outline-danger btn-sm w-100" 
+                                data-bs-toggle="modal" data-bs-target="#bulkDeleteModal">
+                            <i class="fas fa-trash-alt me-1"></i>批量删除
+                        </button>
+                    </div>
+                    
+                    <!-- 删除说明 -->
+                    <small class="text-muted">
+                        <i class="fas fa-info-circle me-1"></i>
+                        支持按状态筛选删除，请谨慎操作
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 邮件管理区域 -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card border-warning">
+            <div class="card-header bg-warning text-dark">
+                <h5 class="mb-0"><i class="fas fa-envelope me-2"></i>邮件管理</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="d-grid">
+                            <form method="post" action="{{ url_for('send_shenzhen_emails') }}" class="d-inline">
+                                <button type="submit" class="btn btn-warning btn-lg w-100" 
+                                        onclick="return confirm('确定要发送所有待发送的深圳到达邮件吗？')">
+                                    <i class="fas fa-paper-plane me-2"></i>发送深圳邮件
+                                </button>
+                            </form>
+                        </div>
+                        {% if shenzhen_email_result %}
+                        <div class="mt-2">
+                            {% if shenzhen_email_result.success %}
+                            <div class="alert alert-success py-2">
+                                <small>
+                                    <i class="fas fa-check-circle me-1"></i>
+                                    {% if shenzhen_email_result.message %}
+                                        {{ shenzhen_email_result.message }}
+                                    {% else %}
+                                        成功发送 {{ shenzhen_email_result.count }} 条深圳邮件
+                                    {% endif %}
+                                </small>
+                            </div>
+                            {% else %}
+                            <div class="alert alert-danger py-2">
+                                <small>
+                                    <i class="fas fa-times-circle me-1"></i>
+                                    {{ shenzhen_email_result.error }}
+                                </small>
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="d-grid">
+                            <form method="post" action="{{ url_for('send_cafe_emails') }}" class="d-inline">
+                                <button type="submit" class="btn btn-info btn-lg w-100" 
+                                        onclick="return confirm('确定要发送所有待发送的咖啡馆到达邮件吗？')">
+                                    <i class="fas fa-coffee me-2"></i>发送咖啡馆邮件
+                                </button>
+                            </form>
+                        </div>
+                        {% if cafe_email_result %}
+                        <div class="mt-2">
+                            {% if cafe_email_result.success %}
+                            <div class="alert alert-success py-2">
+                                <small>
+                                    <i class="fas fa-check-circle me-1"></i>
+                                    {% if cafe_email_result.message %}
+                                        {{ cafe_email_result.message }}
+                                    {% else %}
+                                        成功发送 {{ cafe_email_result.count }} 条咖啡馆邮件
+                                    {% endif %}
+                                </small>
+                            </div>
+                            {% else %}
+                            <div class="alert alert-danger py-2">
+                                <small>
+                                    <i class="fas fa-times-circle me-1"></i>
+                                    {{ cafe_email_result.error }}
+                                </small>
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- 邮件统计信息 -->
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <div class="bg-light p-3 rounded">
+                            <h6 class="text-muted mb-2"><i class="fas fa-info-circle me-1"></i>邮件发送说明</h6>
+                            <div class="row text-center">
+                                <div class="col-md-4">
+                                    <div class="text-warning">
+                                        <i class="fas fa-exclamation-triangle me-1"></i>
+                                        <strong>深圳邮件</strong><br>
+                                        <small>已到深圳但未发送通知的包裹</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="text-info">
+                                        <i class="fas fa-coffee me-1"></i>
+                                        <strong>咖啡馆邮件</strong><br>
+                                        <small>已到咖啡馆但未发送取件码的包裹</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="text-success">
+                                        <i class="fas fa-check-circle me-1"></i>
+                                        <strong>自动判断</strong><br>
+                                        <small>系统自动识别包裹状态</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 包裹列表 -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-light">
+                <h5 class="mb-0"><i class="fas fa-list me-2"></i>包裹列表</h5>
+            </div>
+            <div class="card-body p-0">
+                {% if packages %}
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>深圳快递单号</th>
+                                <th>取件码</th>
+                                <th>客户姓名</th>
+                                <th>客户邮箱</th>
+                                <th>最晚取货时间</th>
+                                <th>状态</th>
+                                <th>邮件状态</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for package in packages %}
+                            <tr>
+                                <td><strong>{{ package.shenzhen_tracking_number }}</strong></td>
+                                <td><span class="badge bg-success fs-6">{{ package.pickup_code }}</span></td>
+                                <td>{{ package.customer_name }}</td>
+                                <td>{{ package.customer_email }}</td>
+                                <td>
+                                    {% if package.latest_pickup_time %}
+                                        {% if package.is_overdue %}
+                                            <span class="text-danger fw-bold">
+                                                <i class="fas fa-exclamation-triangle me-1"></i>
+                                                {{ package.latest_pickup_time.strftime('%m-%d %H:%M') }}
+                                            </span>
+                                        {% else %}
+                                            <span class="text-muted">
+                                                {{ package.latest_pickup_time.strftime('%m-%d %H:%M') }}
+                                            </span>
+                                        {% endif %}
+                                    {% else %}
+                                        <span class="text-muted">未到咖啡馆</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="badge bg-{{ 
+                                        'warning' if package.status == 'shenzhen_arrived' 
+                                        else 'success' if package.status == 'cafe_arrived'
+                                        else 'primary' if package.status == 'picked_up'
+                                        else 'secondary'
+                                    }}">
+                                        {% if package.status == 'shenzhen_arrived' %}已到深圳
+                                        {% elif package.status == 'cafe_arrived' %}已到咖啡馆
+                                        {% elif package.status == 'picked_up' %}已取件
+                                        {% else %}{{ package.status }}{% endif %}
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="small">
+                                        {% if package.shenzhen_email_sent %}
+                                            <div class="text-success">
+                                                <i class="fas fa-check-circle"></i> 深圳通知已发
+                                            </div>
+                                        {% else %}
+                                            <div class="text-warning">
+                                                <i class="fas fa-exclamation-circle"></i> 深圳通知未发
+                                            </div>
+                                        {% endif %}
+                                        {% if package.cafe_email_sent %}
+                                            <div class="text-success">
+                                                <i class="fas fa-check-circle"></i> 咖啡馆通知已发
+                                            </div>
+                                        {% elif package.status == 'cafe_arrived' %}
+                                            <div class="text-warning">
+                                                <i class="fas fa-exclamation-circle"></i> 咖啡馆通知未发
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <!-- 查看按钮 -->
+                                        <a href="{{ url_for('package_detail', package_id=package.id) }}" 
+                                           class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-eye"></i> 查看
+                                        </a>
+                                        
+                                        <!-- 深圳邮件按钮 -->
+                                        {% if package.status == 'shenzhen_arrived' and not package.shenzhen_email_sent %}
+                                            <form method="post" action="{{ url_for('send_single_shenzhen_email', package_id=package.id) }}" 
+                                                  class="d-inline" 
+                                                  onsubmit="return confirm('确认发送深圳到达邮件给客户？')">
+                                                <button type="submit" class="btn btn-sm btn-outline-secondary">
+                                                    <i class="fas fa-envelope"></i> 发深圳邮件
+                                                </button>
+                                            </form>
+                                        {% endif %}
+                                        
+                                        <!-- 咖啡馆邮件按钮 -->
+                                        {% if package.status == 'cafe_arrived' %}
+                                            <form method="post" action="{{ url_for('send_single_cafe_email', package_id=package.id) }}" 
+                                                  class="d-inline" 
+                                                  onsubmit="return confirm('确认发送咖啡馆到达邮件给客户？')">
+                                                <button type="submit" class="btn btn-sm btn-outline-info">
+                                                    <i class="fas fa-envelope"></i> 发咖啡馆邮件
+                                                </button>
+                                            </form>
+                                        {% endif %}
+                                        
+                                        <!-- 快速状态更新按钮 -->
+                                        {% if package.status == 'shenzhen_arrived' %}
+                                            <form method="post" action="{{ url_for('quick_update_status', package_id=package.id) }}" 
+                                                  class="d-inline" 
+                                                  onsubmit="return confirm('确认标记为到达咖啡馆？这将自动发送取件通知邮件。')">
+                                                <input type="hidden" name="status" value="cafe_arrived">
+                                                <button type="submit" class="btn btn-sm btn-outline-success">
+                                                    <i class="fas fa-store"></i> 到咖啡馆
+                                                </button>
+                                            </form>
+                                        {% elif package.status == 'cafe_arrived' %}
+                                            <form method="post" action="{{ url_for('quick_update_status', package_id=package.id) }}" 
+                                                  class="d-inline" 
+                                                  onsubmit="return confirm('确认标记为已取件？')">
+                                                <input type="hidden" name="status" value="picked_up">
+                                                <button type="submit" class="btn btn-sm btn-outline-primary">
+                                                    <i class="fas fa-check-circle"></i> 已取件
+                                                </button>
+                                            </form>
+                                        {% endif %}
+                                        
+                                        <!-- 删除按钮 -->
+                                        <form method="post" action="{{ url_for('delete_package', package_id=package.id) }}" 
+                                              class="d-inline" 
+                                              onsubmit="return confirm('确定要删除这个包裹吗？此操作不可恢复。')">
+                                            <button type="submit" class="btn btn-sm btn-outline-danger">
+                                                <i class="fas fa-trash"></i> 删除
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-shipping-fast fa-3x text-muted mb-3"></i>
+                    <h4 class="text-muted">暂无包裹</h4>
+                    <p class="text-muted">使用上方功能创建您的第一个包裹记录</p>
+                    <a href="{{ url_for('new_package') }}" class="btn btn-primary">
+                        <i class="fas fa-plus me-1"></i>创建包裹记录
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 批量删除模态框 -->
+<div class="modal fade" id="bulkDeleteModal" tabindex="-1" aria-labelledby="bulkDeleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="bulkDeleteModalLabel">
+                    <i class="fas fa-exclamation-triangle me-2"></i>批量删除包裹
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post" action="{{ url_for('delete_all_packages') }}" id="bulkDeleteForm">
+                <div class="modal-body">
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>警告：</strong>此操作将永久删除数据，无法恢复！
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="status_filter" class="form-label">删除条件</label>
+                        <select class="form-select" id="status_filter" name="status_filter">
+                            <option value="">所有包裹</option>
+                            <option value="shenzhen_arrived">已到深圳仓库</option>
+                            <option value="cafe_arrived">已到咖啡馆</option>
+                            <option value="picked_up">已取件</option>
+                        </select>
+                        <div class="form-text">选择要删除的包裹状态，留空则删除所有包裹</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="confirm_text" class="form-label">确认删除</label>
+                        <input type="text" class="form-control" id="confirm_text" name="confirm_text" 
+                               placeholder="请输入 DELETE ALL 确认删除" required>
+                        <div class="form-text">请输入 "DELETE ALL" 来确认删除操作</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="confirm_check" required>
+                            <label class="form-check-label" for="confirm_check">
+                                我确认要删除选中的包裹，此操作不可恢复
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="submit" class="btn btn-danger" id="confirmDeleteBtn" disabled>
+                        <i class="fas fa-trash-alt me-1"></i>确认删除
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- 批量删除确认脚本 -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const confirmText = document.getElementById('confirm_text');
+    const confirmCheck = document.getElementById('confirm_check');
+    const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+    
+    function updateDeleteButton() {
+        const textValid = confirmText.value === 'DELETE ALL';
+        const checkValid = confirmCheck.checked;
+        confirmDeleteBtn.disabled = !(textValid && checkValid);
+    }
+    
+    confirmText.addEventListener('input', updateDeleteButton);
+    confirmCheck.addEventListener('change', updateDeleteButton);
+    
+    // 表单提交确认
+    document.getElementById('bulkDeleteForm').addEventListener('submit', function(e) {
+        if (!confirm('确定要执行批量删除操作吗？此操作不可恢复！')) {
+            e.preventDefault();
+        }
+    });
+});
+</script>
+
+{% endblock %} 

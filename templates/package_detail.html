@@ -1,0 +1,192 @@
+{% extends "base.html" %}
+
+{% block title %}包裹详情 - 集运系统{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2><i class="fas fa-box me-2"></i>包裹详情</h2>
+            <div>
+                <a href="{{ url_for('index') }}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-1"></i>返回列表
+                </a>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-info-circle me-2"></i>基本信息
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p><strong>深圳快递单号:</strong> <span class="badge bg-primary fs-6">{{ package.shenzhen_tracking_number }}</span></p>
+                                <p><strong>取件码:</strong> <span class="badge bg-success fs-6">{{ package.pickup_code }}</span></p>
+                                <p><strong>客户姓名:</strong> {{ package.customer_name }}</p>
+                                <p><strong>客户邮箱:</strong> {{ package.customer_email }}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <p><strong>状态:</strong> 
+                                    <span class="badge bg-{{ package.status_color }} fs-6">
+                                        <i class="fas fa-{{ 'truck' if package.status == 'shenzhen_arrived' else 'store' if package.status == 'cafe_arrived' else 'check-circle' }} me-1"></i>
+                                        {{ package.status_display }}
+                                    </span>
+                                </p>
+                                <p><strong>最后取件时间:</strong> 
+                                    {% if package.latest_pickup_time %}
+                                        {% if package.is_overdue %}
+                                            <span class="text-danger fw-bold">
+                                                <i class="fas fa-exclamation-triangle me-1"></i>
+                                                {{ package.latest_pickup_time.strftime('%Y-%m-%d %H:%M') }} (已超期)
+                                            </span>
+                                        {% else %}
+                                            <span class="text-muted">
+                                                {{ package.latest_pickup_time.strftime('%Y-%m-%d %H:%M') }}
+                                            </span>
+                                        {% endif %}
+                                    {% else %}
+                                        <span class="text-muted">未到咖啡馆</span>
+                                    {% endif %}
+                                </p>
+                            </div>
+                        </div>
+                        
+                        {% if package.notes %}
+                        <div class="mt-3">
+                            <strong>备注:</strong>
+                            <div class="alert alert-info">{{ package.notes }}</div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- 邮件状态 -->
+                <div class="card mt-4">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-envelope me-2"></i>邮件状态
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="d-flex align-items-center">
+                                    {% if package.shenzhen_email_sent %}
+                                        <i class="fas fa-check-circle text-success me-2"></i>
+                                        <span class="text-success">深圳到达通知已发送</span>
+                                    {% else %}
+                                        <i class="fas fa-exclamation-circle text-warning me-2"></i>
+                                        <span class="text-warning">深圳到达通知未发送</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="d-flex align-items-center">
+                                    {% if package.cafe_email_sent %}
+                                        <i class="fas fa-check-circle text-success me-2"></i>
+                                        <span class="text-success">咖啡馆到达通知已发送</span>
+                                    {% elif package.status == 'cafe_arrived' %}
+                                        <i class="fas fa-exclamation-circle text-warning me-2"></i>
+                                        <span class="text-warning">咖啡馆到达通知未发送</span>
+                                    {% else %}
+                                        <i class="fas fa-minus text-muted me-2"></i>
+                                        <span class="text-muted">暂未到达咖啡馆</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <!-- 操作面板 -->
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-cogs me-2"></i>操作
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <!-- 状态更新 -->
+                        <div class="mb-3">
+                            <label class="form-label"><strong>更新状态:</strong></label>
+                            <form method="POST" action="{{ url_for('update_status', package_id=package.id) }}" class="d-flex">
+                                <select name="status" class="form-select me-2">
+                                    <option value="shenzhen_arrived" {% if package.status == 'shenzhen_arrived' %}selected{% endif %}>已到深圳</option>
+                                    <option value="cafe_arrived" {% if package.status == 'cafe_arrived' %}selected{% endif %}>已到咖啡馆</option>
+                                    <option value="picked_up" {% if package.status == 'picked_up' %}selected{% endif %}>已取件</option>
+                                </select>
+                                <button type="submit" class="btn btn-primary">更新</button>
+                            </form>
+                        </div>
+
+                        <!-- 快速操作按钮 -->
+                        <div class="d-grid gap-2">
+                            {% if package.status == 'shenzhen_arrived' %}
+                                <a href="{{ url_for('cafe_arrival', package_id=package.id) }}" 
+                                   class="btn btn-success"
+                                   onclick="return confirm('确认标记为到达咖啡馆？这将自动发送取件通知邮件。')">
+                                    <i class="fas fa-store me-1"></i>标记到达咖啡馆
+                                </a>
+                            {% endif %}
+
+                            {% if package.status == 'cafe_arrived' %}
+                                <form method="POST" action="{{ url_for('update_status', package_id=package.id) }}" class="d-grid">
+                                    <input type="hidden" name="status" value="picked_up">
+                                    <button type="submit" class="btn btn-primary"
+                                            onclick="return confirm('确认标记为已取件？')">
+                                        <i class="fas fa-check-circle me-1"></i>标记已取件
+                                    </button>
+                                </form>
+                            {% endif %}
+
+                            {% if not package.shenzhen_email_sent %}
+                                <a href="{{ url_for('resend_shenzhen_email', package_id=package.id) }}" 
+                                   class="btn btn-outline-warning"
+                                   onclick="return confirm('确定要重新发送深圳到达通知邮件吗？')">
+                                    <i class="fas fa-envelope me-1"></i>重发深圳通知
+                                </a>
+                            {% endif %}
+
+                            {% if package.status == 'cafe_arrived' and not package.cafe_email_sent %}
+                                <a href="{{ url_for('resend_cafe_email', package_id=package.id) }}" 
+                                   class="btn btn-outline-success"
+                                   onclick="return confirm('确定要重新发送咖啡馆到达通知邮件吗？')">
+                                    <i class="fas fa-envelope me-1"></i>重发咖啡馆通知
+                                </a>
+                            {% endif %}
+                            
+                            <!-- 删除按钮 -->
+                            <form method="POST" action="{{ url_for('delete_package', package_id=package.id) }}" class="d-grid">
+                                <button type="submit" class="btn btn-outline-danger"
+                                        onclick="return confirm('确定要删除这个包裹吗？此操作不可恢复。')">
+                                    <i class="fas fa-trash me-1"></i>删除包裹
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 时间信息 -->
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-clock me-2"></i>时间信息
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <p><strong>创建时间:</strong><br>{{ package.created_at.strftime('%Y-%m-%d %H:%M') if package.created_at else '未设置' }}</p>
+                        <p><strong>最后更新:</strong><br>{{ package.updated_at.strftime('%Y-%m-%d %H:%M') if package.updated_at else '未设置' }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

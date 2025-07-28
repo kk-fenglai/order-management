@@ -1,0 +1,207 @@
+{% extends "base.html" %}
+
+{% block title %}取件码二维码 - 集运系统{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2><i class="fas fa-qrcode me-2"></i>取件码二维码</h2>
+            <div>
+                <button onclick="window.print()" class="btn btn-outline-primary">
+                    <i class="fas fa-print me-1"></i>打印二维码
+                </button>
+                <a href="{{ url_for('index') }}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-1"></i>返回列表
+                </a>
+            </div>
+        </div>
+
+        {% if packages %}
+        <!-- 批量二维码 -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-qrcode me-2"></i>批量取件码二维码
+                </h5>
+                <small class="text-muted">扫描此二维码可查看所有取件码</small>
+            </div>
+            <div class="card-body text-center">
+                <div class="row">
+                    <div class="col-md-6">
+                        <img src="data:image/png;base64,{{ qr_image }}" alt="取件码二维码" class="img-fluid" style="max-width: 300px;">
+                        <p class="mt-2 text-muted">扫描二维码查看所有取件码</p>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="text-start">
+                            <h6>二维码内容预览：</h6>
+                            <pre class="bg-light p-3 rounded" style="font-size: 12px; max-height: 200px; overflow-y: auto;">{{ qr_text }}</pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 单个包裹二维码 -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-box me-2"></i>单个包裹取件码
+                </h5>
+                <small class="text-muted">每个包裹的独立二维码</small>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    {% for package in packages %}
+                    <div class="col-md-4 mb-4">
+                        <div class="card h-100 border-primary">
+                            <div class="card-header bg-primary text-white text-center">
+                                <h6 class="mb-0">
+                                    {{ package.customer_name }}
+                                </h6>
+                            </div>
+                            <div class="card-body text-center">
+                                <!-- 取件码二维码 -->
+                                <div class="mb-3">
+                                    <div id="qr-{{ package.id }}" class="d-inline-block"></div>
+                                </div>
+                                
+                                <!-- 取件码信息 -->
+                                <div class="alert alert-success">
+                                    <h4 class="mb-1">{{ package.pickup_code }}</h4>
+                                    <small>取件码</small>
+                                </div>
+                                
+                                <!-- 包裹信息 -->
+                                <div class="text-start small">
+                                    <p><strong>客户:</strong> {{ package.customer_name }}</p>
+                                    <p><strong>深圳单号:</strong> {{ package.shenzhen_tracking_number }}</p>
+                                    <p><strong>到达时间:</strong> {{ package.cafe_arrival_date.strftime('%m-%d %H:%M') }}</p>
+                                </div>
+                            </div>
+                            <div class="card-footer text-center">
+                                <button onclick="printQR({{ package.id }})" class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-print me-1"></i>打印
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- 取件码列表 -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-list me-2"></i>取件码列表
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>序号</th>
+                                <th>取件码</th>
+                                <th>客户姓名</th>
+                                <th>深圳快递单号</th>
+                                <th>到达时间</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for package in packages %}
+                            <tr>
+                                <td>{{ loop.index }}</td>
+                                <td><span class="badge bg-success fs-6">{{ package.pickup_code }}</span></td>
+                                <td>{{ package.customer_name }}</td>
+                                <td>{{ package.shenzhen_tracking_number }}</td>
+                                <td>{{ package.cafe_arrival_date.strftime('%m-%d %H:%M') }}</td>
+                                <td>
+                                    <a href="{{ url_for('package_detail', package_id=package.id) }}" 
+                                       class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-qrcode fa-3x text-muted mb-3"></i>
+            <h4 class="text-muted">暂无已到达咖啡馆的包裹</h4>
+            <p class="text-muted">当有包裹到达咖啡馆后，这里会显示取件码二维码</p>
+            <a href="{{ url_for('index') }}" class="btn btn-primary">
+                <i class="fas fa-arrow-left me-1"></i>返回包裹列表
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- 打印样式 -->
+<style media="print">
+    /* 只隐藏单个包裹二维码和取件码列表，保留批量二维码卡片 */
+    .card:not(.mb-4), .card:not(.mb-4) * { display: none !important; }
+    .card.mb-4, .card.mb-4 * { display: block !important; }
+    .navbar, .btn, footer { display: none !important; }
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+<script>
+// 生成单个包裹的二维码
+{% for package in packages %}
+QRCode.toCanvas(document.getElementById('qr-{{ package.id }}'), 
+    '客户: {{ package.customer_name }}\n取件码: {{ package.pickup_code }}', 
+    {
+        width: 150,
+        margin: 2,
+        color: {
+            dark: '#000000',
+            light: '#FFFFFF'
+        }
+    }, 
+    function (error) {
+        if (error) console.error(error);
+    }
+);
+{% endfor %}
+
+// 打印单个二维码
+function printQR(packageId) {
+    const printWindow = window.open('', '_blank');
+    const qrElement = document.getElementById('qr-' + packageId);
+    const packageCard = qrElement.closest('.card');
+    
+    printWindow.document.write(`
+        <html>
+        <head>
+            <title>取件码二维码</title>
+            <style>
+                body { font-family: Arial, sans-serif; margin: 20px; }
+                .qr-container { text-align: center; }
+                .pickup-code { font-size: 24px; font-weight: bold; margin: 10px 0; }
+                .info { margin: 10px 0; }
+            </style>
+        </head>
+        <body>
+            <div class="qr-container">
+                ${packageCard.innerHTML}
+            </div>
+        </body>
+        </html>
+    `);
+    printWindow.document.close();
+    printWindow.print();
+}
+</script>
+{% endblock %} 

@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>订单确认 - 订单号 #{{ order.id }}</title>
+    <style>
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f8f9fa;
+        }
+        .email-container {
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #007bff, #0056b3);
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: bold;
+        }
+        .content {
+            padding: 30px 20px;
+        }
+        .order-info {
+            background-color: #f8f9fa;
+            border-radius: 6px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .order-details {
+            display: table;
+            width: 100%;
+            margin: 15px 0;
+        }
+        .order-row {
+            display: table-row;
+        }
+        .order-label {
+            display: table-cell;
+            font-weight: bold;
+            padding: 8px 0;
+            width: 120px;
+            color: #555;
+        }
+        .order-value {
+            display: table-cell;
+            padding: 8px 0;
+        }
+        .total-price {
+            font-size: 18px;
+            font-weight: bold;
+            color: #007bff;
+            text-align: right;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 2px solid #e9ecef;
+        }
+        .footer {
+            background-color: #f8f9fa;
+            padding: 20px;
+            text-align: center;
+            color: #666;
+            font-size: 14px;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        .status-pending {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        .status-confirmed {
+            background-color: #d1ecf1;
+            color: #0c5460;
+        }
+        .status-shipped {
+            background-color: #cce5ff;
+            color: #004085;
+        }
+        .status-delivered {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .contact-info {
+            background-color: #e9ecef;
+            border-radius: 6px;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        .contact-info h4 {
+            margin: 0 0 10px 0;
+            color: #495057;
+        }
+        .contact-info p {
+            margin: 5px 0;
+            color: #6c757d;
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <div class="header">
+            <h1>🎉 订单到达通知</h1>
+            <p>您的订单已准备就绪！</p>
+        </div>
+        
+        <div class="content">
+            <p>尊敬的 <strong>{{ order.customer_name }}</strong>，</p>
+            
+            <p>我们很高兴地通知您，您的订单已经到达，请您到咖啡馆自取。以下是您的订单详情：</p>
+            
+            <div class="order-info">
+                <h3 style="margin-top: 0; color: #007bff;">订单信息</h3>
+                <div style="background-color: #d4edda; border: 2px solid #28a745; border-radius: 6px; padding: 15px; margin: 15px 0; text-align: center;">
+                    <h4 style="color: #155724; margin: 0;">📋 取餐信息</h4>
+                    <p style="color: #155724; margin: 10px 0; font-size: 16px;"><strong>您的订单号：{{ order.custom_order_number }}</strong></p>
+                    <p style="color: #155724; margin: 10px 0; font-size: 16px;"><strong>快递取件号码：{{ order.pickup_code }}</strong></p>
+                    <p style="color: #155724; margin: 5px 0;">请到咖啡馆前台出示此订单号和取件号码取餐</p>
+                </div>
+                
+                <div class="order-details">
+                    <div class="order-row">
+                        <div class="order-label">订单号:</div>
+                        <div class="order-value"><strong>#{{ order.id }}</strong></div>
+                    </div>
+                    <div class="order-row">
+                        <div class="order-label">订单日期:</div>
+                        <div class="order-value">{{ order.order_date.strftime('%Y年%m月%d日 %H:%M') }}</div>
+                    </div>
+                    <div class="order-row">
+                        <div class="order-label">当前状态:</div>
+                        <div class="order-value">
+                            <span class="status-badge status-{{ order.status }}">
+                                {% if order.status == 'pending' %}待处理
+                                {% elif order.status == 'confirmed' %}已确认
+                                {% elif order.status == 'shipped' %}已发货
+                                {% elif order.status == 'delivered' %}已送达
+                                {% else %}{{ order.status }}{% endif %}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                
+                <h4 style="color: #495057; margin: 25px 0 15px 0;">产品详情</h4>
+                <div class="order-details">
+                    <div class="order-row">
+                        <div class="order-label">产品名称:</div>
+                        <div class="order-value">{{ order.product_name }}</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="contact-info">
+                <h4>🏪 咖啡馆信息</h4>
+                <p><strong>取餐地址:</strong> 我们的咖啡馆前台</p>
+                <p><strong>联系电话:</strong> 400-123-4567</p>
+                <p><strong>营业时间:</strong> 周一至周日 8:00-22:00</p>
+                <p><strong>温馨提示:</strong> 请携带有效身份证件取餐</p>
+            </div>
+            
+            <p><strong>取餐提醒:</strong></p>
+            <ul>
+                <li>请到咖啡馆前台出示订单号和取件号码取餐</li>
+                <li>订单号：<strong>{{ order.custom_order_number }}</strong></li>
+                <li>快递取件号码：<strong>{{ order.pickup_code }}</strong></li>
+                <li>请尽快取餐，避免影响口感</li>
+                <li>如有任何问题，请随时联系我们</li>
+            </ul>
+            
+            <p>感谢您选择我们的咖啡馆！</p>
+            
+            <p>期待您的光临！<br>
+            <strong>咖啡馆团队</strong></p>
+        </div>
+        
+        <div class="footer">
+            <p>此邮件由订单管理系统自动发送，请勿回复此邮件。</p>
+            <p>如有疑问，请联系我们的客服团队。</p>
+            <p style="margin-top: 15px; font-size: 12px; color: #999;">
+                © 2024 您的公司名称. 保留所有权利.
+            </p>
+        </div>
+    </div>
+</body>
+</html> 

@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: order-management-system
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: python run_app.py
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.9.0
+      - key: MAIL_SERVER
+        value: smtp.163.com
+      - key: MAIL_PORT
+        value: 465
+      - key: MAIL_USE_SSL
+        value: True
+      - key: MAIL_USERNAME
+        value: alzy1210@163.com
+      - key: MAIL_PASSWORD
+        value: MAjQjkgenAqciFEW
+      - key: SECRET_KEY
+        value: your-secret-key-here-change-this
+      - key: FLASK_ENV
+        value: production 

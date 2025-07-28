@@ -1,0 +1,30 @@
+# 本地配置文件 - 包含邮箱信息
+# 注意：这个文件包含敏感信息，不要提交到版本控制系统
+
+import os
+
+# 应用配置
+SECRET_KEY = 'dev-secret-key-change-in-production'
+FLASK_DEBUG = True
+
+# 数据库配置
+DATABASE_URL = 'sqlite:///orders.db'
+
+# 邮件配置 - 163邮箱
+MAIL_SERVER = 'smtp.163.com'
+MAIL_PORT = 25
+MAIL_USE_TLS = False
+MAIL_USE_SSL = False
+MAIL_USERNAME = 'alzy1210@163.com'
+MAIL_PASSWORD = 'MAjQjkgenAqciFEW'
+
+# 设置环境变量
+os.environ['SECRET_KEY'] = SECRET_KEY
+os.environ['FLASK_DEBUG'] = str(FLASK_DEBUG)
+os.environ['DATABASE_URL'] = DATABASE_URL
+os.environ['MAIL_SERVER'] = MAIL_SERVER
+os.environ['MAIL_PORT'] = str(MAIL_PORT)
+os.environ['MAIL_USE_TLS'] = str(MAIL_USE_TLS)
+os.environ['MAIL_USE_SSL'] = str(MAIL_USE_SSL)
+os.environ['MAIL_USERNAME'] = MAIL_USERNAME
+os.environ['MAIL_PASSWORD'] = MAIL_PASSWORD 
