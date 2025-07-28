@@ -5,7 +5,6 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_mail import Mail, Message
 from werkzeug.utils import secure_filename
 import os
-import pandas as pd
 import qrcode
 from io import BytesIO
 import base64
@@ -118,66 +117,80 @@ def create_app(config_name='default'):
                     elif file_size > app.config.get('MAX_CONTENT_LENGTH', 16 * 1024 * 1024):
                         import_result = {'success': False, 'error': '文件大小超过限制（最大16MB）'}
                     else:
-                        df = pd.read_excel(file, engine='openpyxl')
+                        # 使用openpyxl读取Excel文件
+                        from openpyxl import load_workbook
+                        wb = load_workbook(file, data_only=True)
+                        ws = wb.active
                         
-                        if df.empty:
-                            import_result = {'success': False, 'error': 'Excel文件中没有数据'}
+                        # 获取表头
+                        headers = []
+                        for cell in ws[1]:
+                            headers.append(str(cell.value).strip() if cell.value else '')
+                        
+                        required_cols = ['客户名称', '快递单号', '客户邮箱', '备注']
+                        missing_cols = [col for col in required_cols if col not in headers]
+                        
+                        if missing_cols:
+                            import_result = {'success': False, 'error': f'Excel缺少必要列: {", ".join(missing_cols)}，请使用模板'}
                         else:
-                            required_cols = ['客户名称', '快递单号', '客户邮箱', '备注']
-                            missing_cols = [col for col in required_cols if col not in df.columns]
+                            rows = []
+                            ids = []
+                            skipped_rows = []
                             
-                            if missing_cols:
-                                import_result = {'success': False, 'error': f'Excel缺少必要列: {", ".join(missing_cols)}，请使用模板'}
-                            else:
-                                rows = []
-                                ids = []
-                                skipped_rows = []
-                                for _, row in df.iterrows():
-                                    customer_name = str(row['客户名称']).strip()
-                                    tracking_number = str(row['快递单号']).strip()
-                                    email = str(row['客户邮箱']).strip()
-                                    notes = str(row['备注']).strip()
-                                    if not customer_name or not tracking_number or not email:
-                                        continue
-                                    
-                                    # 检查快递单号是否已存在
-                                    existing_package = Package.query.filter_by(shenzhen_tracking_number=tracking_number).first()
-                                    if existing_package:
-                                        skipped_rows.append({
-                                            'customer_name': customer_name,
-                                            'tracking_number': tracking_number,
-                                            'email': email,
-                                            'notes': notes,
-                                            'reason': '快递单号已存在'
-                                        })
-                                        continue
-                                    
-                                    # 创建包裹
-                                    package = Package(
-                                        customer_name=customer_name,
-                                        shenzhen_tracking_number=tracking_number,
-                                        customer_email=email,
-                                        notes=notes,
-                                        pickup_code=Package.generate_pickup_code()
-                                    )
-                                    db.session.add(package)
-                                    db.session.flush()  # 获取ID
-                                    ids.append(package.id)
-                                    rows.append({
+                            # 获取列索引
+                            customer_name_idx = headers.index('客户名称')
+                            tracking_number_idx = headers.index('快递单号')
+                            email_idx = headers.index('客户邮箱')
+                            notes_idx = headers.index('备注')
+                            
+                            # 处理数据行
+                            for row_num in range(2, ws.max_row + 1):
+                                customer_name = str(ws.cell(row=row_num, column=customer_name_idx + 1).value or '').strip()
+                                tracking_number = str(ws.cell(row=row_num, column=tracking_number_idx + 1).value or '').strip()
+                                email = str(ws.cell(row=row_num, column=email_idx + 1).value or '').strip()
+                                notes = str(ws.cell(row=row_num, column=notes_idx + 1).value or '').strip()
+                                
+                                if not customer_name or not tracking_number or not email:
+                                    continue
+                                
+                                # 检查快递单号是否已存在
+                                existing_package = Package.query.filter_by(shenzhen_tracking_number=tracking_number).first()
+                                if existing_package:
+                                    skipped_rows.append({
                                         'customer_name': customer_name,
                                         'tracking_number': tracking_number,
                                         'email': email,
-                                        'notes': notes
+                                        'notes': notes,
+                                        'reason': '快递单号已存在'
                                     })
-                                db.session.commit()
-                                import_result = {
-                                    'success': True, 
-                                    'count': len(rows), 
-                                    'rows': rows, 
-                                    'ids': ids,
-                                    'skipped_count': len(skipped_rows),
-                                    'skipped_rows': skipped_rows
-                                }
+                                    continue
+                                
+                                # 创建包裹
+                                package = Package(
+                                    customer_name=customer_name,
+                                    shenzhen_tracking_number=tracking_number,
+                                    customer_email=email,
+                                    notes=notes,
+                                    pickup_code=Package.generate_pickup_code()
+                                )
+                                db.session.add(package)
+                                db.session.flush()  # 获取ID
+                                ids.append(package.id)
+                                rows.append({
+                                    'customer_name': customer_name,
+                                    'tracking_number': tracking_number,
+                                    'email': email,
+                                    'notes': notes
+                                })
+                            db.session.commit()
+                            import_result = {
+                                'success': True, 
+                                'count': len(rows), 
+                                'rows': rows, 
+                                'ids': ids,
+                                'skipped_count': len(skipped_rows),
+                                'skipped_rows': skipped_rows
+                            }
                 except Exception as e:
                     db.session.rollback()
                     error_msg = str(e)
@@ -506,14 +519,18 @@ def create_app(config_name='default'):
                     import_result = {'success': False, 'error': '上传的文件为空'}
                     return render_template('import_excel.html', import_result=import_result)
                 
-                df = pd.read_excel(file, engine='openpyxl')
+                # 使用openpyxl读取Excel文件
+                from openpyxl import load_workbook
+                wb = load_workbook(file, data_only=True)
+                ws = wb.active
                 
-                if df.empty:
-                    import_result = {'success': False, 'error': 'Excel文件中没有数据'}
-                    return render_template('import_excel.html', import_result=import_result)
+                # 获取表头
+                headers = []
+                for cell in ws[1]:
+                    headers.append(str(cell.value).strip() if cell.value else '')
                 
                 required_cols = ['客户名称', '快递单号', '客户邮箱', '备注']
-                missing_cols = [col for col in required_cols if col not in df.columns]
+                missing_cols = [col for col in required_cols if col not in headers]
                 
                 if missing_cols:
                     import_result = {'success': False, 'error': f'Excel缺少必要列: {", ".join(missing_cols)}，请使用模板'}
@@ -522,11 +539,20 @@ def create_app(config_name='default'):
                 rows = []
                 ids = []
                 skipped_rows = []
-                for _, row in df.iterrows():
-                    customer_name = str(row['客户名称']).strip()
-                    tracking_number = str(row['快递单号']).strip()
-                    email = str(row['客户邮箱']).strip()
-                    notes = str(row['备注']).strip()
+                
+                # 获取列索引
+                customer_name_idx = headers.index('客户名称')
+                tracking_number_idx = headers.index('快递单号')
+                email_idx = headers.index('客户邮箱')
+                notes_idx = headers.index('备注')
+                
+                # 处理数据行
+                for row_num in range(2, ws.max_row + 1):
+                    customer_name = str(ws.cell(row=row_num, column=customer_name_idx + 1).value or '').strip()
+                    tracking_number = str(ws.cell(row=row_num, column=tracking_number_idx + 1).value or '').strip()
+                    email = str(ws.cell(row=row_num, column=email_idx + 1).value or '').strip()
+                    notes = str(ws.cell(row=row_num, column=notes_idx + 1).value or '').strip()
+                    
                     if not customer_name or not tracking_number or not email:
                         continue
                     
