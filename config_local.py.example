@@ -1,0 +1,30 @@
+# 本地配置文件示例
+# 复制此文件为 config_local.py 并修改相应配置
+
+import os
+
+# 邮件服务器配置
+MAIL_SERVER = 'smtp.gmail.com'  # 邮件服务器地址
+MAIL_PORT = 587                 # 邮件服务器端口
+MAIL_USE_TLS = True            # 使用TLS加密
+MAIL_USERNAME = 'your-email@gmail.com'  # 邮箱用户名
+MAIL_PASSWORD = 'your-app-password'     # 邮箱密码或应用专用密码
+
+# 应用配置
+BASE_URL = 'http://192.168.43.40:5000'  # 应用访问地址，用于二维码生成
+os.environ['BASE_URL'] = BASE_URL
+
+# 数据库配置
+SQLALCHEMY_DATABASE_URI = 'sqlite:///order_system.db'  # SQLite数据库路径
+
+# 安全配置
+SECRET_KEY = 'your-secret-key-here'  # 应用密钥，请修改为随机字符串
+
+# 文件上传配置
+MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 最大文件上传大小（16MB）
+
+# 分页配置
+ITEMS_PER_PAGE = 20  # 每页显示的项目数量
+
+# 调试模式
+DEBUG = True  # 开发环境设为True，生产环境设为False 
