@@ -15,8 +15,8 @@ MAIL_SERVER = 'smtp.gmail.com'
 MAIL_PORT = 587
 MAIL_USE_TLS = True
 MAIL_USE_SSL = False
-MAIL_USERNAME = 'your-gmail@gmail.com'  # 替换为你的Gmail
-MAIL_PASSWORD = 'your-app-password'     # 替换为Gmail应用专用密码
+MAIL_USERNAME = 'dengfenglai1210@gmail.com'  # 替换为你的Gmail
+MAIL_PASSWORD = 'fwpkjjgtfyqomqqa'     # Gmail应用专用密码
 
 # 服务器配置 - 使用实际IP地址，让手机可以访问
 BASE_URL = 'http://192.168.43.40:5000'
