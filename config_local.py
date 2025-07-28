@@ -10,13 +10,13 @@ FLASK_DEBUG = True
 # 数据库配置
 DATABASE_URL = 'sqlite:///orders.db'
 
-# 邮件配置 - 163邮箱
-MAIL_SERVER = 'smtp.163.com'
-MAIL_PORT = 25
-MAIL_USE_TLS = False
+# 邮件配置 - Gmail (推荐用于Render部署)
+MAIL_SERVER = 'smtp.gmail.com'
+MAIL_PORT = 587
+MAIL_USE_TLS = True
 MAIL_USE_SSL = False
-MAIL_USERNAME = 'alzy1210@163.com'
-MAIL_PASSWORD = 'MAjQjkgenAqciFEW'
+MAIL_USERNAME = 'your-gmail@gmail.com'  # 替换为你的Gmail
+MAIL_PASSWORD = 'your-app-password'     # 替换为Gmail应用专用密码
 
 # 服务器配置 - 使用实际IP地址，让手机可以访问
 BASE_URL = 'http://192.168.43.40:5000'
