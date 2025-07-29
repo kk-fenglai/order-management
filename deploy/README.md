@@ -10,7 +10,7 @@
 - `deploy_simple.bat` - **一键部署脚本**（双击运行）
 - `deploy_render.py` - Render 部署脚本
 - `快速部署指南.md` - 详细部署指南
-- `render.yaml` - Render 配置文件
+- `../render.yaml` - Render 配置文件（在项目根目录）
 - `Procfile` - 启动配置文件
 
 #### **2. Railway 云端部署**
