@@ -6,7 +6,7 @@ services:
     startCommand: python run_app.py
     envVars:
       - key: PYTHON_VERSION
-        value: 3.9.0
+        value: 3.11.18
       - key: MAIL_SERVER
         value: smtp.163.com
       - key: MAIL_PORT
