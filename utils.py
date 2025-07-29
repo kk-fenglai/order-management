@@ -91,10 +91,25 @@ def generate_pickup_codes_qr(packages):
     """生成批量二维码，内容为移动端取件码页面网址，便于微信扫码跳转"""
     if not packages:
         return None, None
-    # 从配置中获取服务器地址
-    from flask import current_app
-    base_url = current_app.config.get('BASE_URL', 'http://localhost:5000')
+    
+    # 自动获取当前请求的URL
+    from flask import request, current_app
+    try:
+        if request and hasattr(request, 'host_url'):
+            # 如果有请求上下文，使用当前请求的URL
+            base_url = request.host_url.rstrip('/')
+            logger.info(f"使用请求URL作为BASE_URL: {base_url}")
+        else:
+            # 否则使用配置的BASE_URL
+            base_url = current_app.config.get('BASE_URL', 'http://localhost:5000')
+            logger.info(f"使用配置的BASE_URL: {base_url}")
+    except Exception as e:
+        # 如果获取失败，使用配置的BASE_URL
+        base_url = current_app.config.get('BASE_URL', 'http://localhost:5000')
+        logger.warning(f"获取BASE_URL失败，使用默认值: {base_url}, 错误: {e}")
+    
     url = f"{base_url}/mobile_pickup"
+    
     # 生成二维码
     qr = qrcode.QRCode(
         version=1,
@@ -108,7 +123,16 @@ def generate_pickup_codes_qr(packages):
     buf = io.BytesIO()
     img.save(buf, format='PNG')
     qr_image = base64.b64encode(buf.getvalue()).decode('utf-8')
-    return qr_image, url
+    
+    # 生成更详细的预览内容
+    preview_content = f"""二维码内容预览：
+URL: {url}
+功能: 移动端取件码查看页面
+用途: 扫描后可在手机上查看所有取件码
+包含包裹数量: {len(packages)} 个
+生成时间: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"""
+    
+    return qr_image, preview_content
 
 def format_datetime(dt, format_str='%Y-%m-%d %H:%M'):
     """格式化日期时间"""

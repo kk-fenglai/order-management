@@ -445,9 +445,13 @@ def create_app(config_name='default'):
         
         qr_image, qr_text = generate_pickup_codes_qr(packages)
         
+        # 提取URL用于显示
+        qr_url = qr_text.split('URL: ')[1].split('\n')[0] if 'URL: ' in qr_text else qr_text
+        
         return render_template('qr_codes.html', 
                              qr_image=qr_image, 
-                             qr_text=qr_text, 
+                             qr_text=qr_text,
+                             qr_url=qr_url,
                              packages=packages)
     
     @app.route('/mobile_pickup')
