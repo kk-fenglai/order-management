@@ -10,7 +10,7 @@ services:
     envVars:
       # ===== 基础配置 =====
       - key: PYTHON_VERSION
-        value: 3.11.18
+        value: 3.11.5
       
       # ===== Flask应用配置 =====
       - key: FLASK_ENV

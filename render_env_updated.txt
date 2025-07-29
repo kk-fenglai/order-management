@@ -1,0 +1,21 @@
+# Render环境变量配置 - 更新版本
+# 使用Python 3.11.5 (Render支持版本)
+
+PYTHON_VERSION=3.11.5
+FLASK_ENV=production
+FLASK_DEBUG=false
+SECRET_KEY=f7e3f65dcf0d3e6da4b96b75e686aeffd9db86f5acd41c3ecfcca25239e57b61
+SQLALCHEMY_TRACK_MODIFICATIONS=false
+MAIL_SERVER=smtp.gmail.com
+MAIL_PORT=587
+MAIL_USE_TLS=true
+MAIL_USE_SSL=false
+MAIL_USERNAME=dengfenglai1210@gmail.com
+MAIL_PASSWORD=fwpkjjgtfyqomqqa
+BASE_URL=https://your-app-name.onrender.com
+ITEMS_PER_PAGE=20
+MAX_CONTENT_LENGTH=16777216
+WTF_CSRF_ENABLED=true
+WTF_CSRF_SECRET_KEY=a764d876752e9cb4e962f07aa6616cf0c293ba1fe26966df35a3de992d1c2b97
+LOG_LEVEL=INFO
+LOG_TO_STDOUT=true 
