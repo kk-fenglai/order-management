@@ -8,4 +8,5 @@ qrcode[pil]==7.4.2
 pytz==2024.1
 Pillow==10.2.0
 python-dotenv==1.0.0
-gunicorn==21.2.0 
+gunicorn==21.2.0
+email-validator==2.1.0 
