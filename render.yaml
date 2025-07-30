@@ -5,6 +5,12 @@ services:
     buildCommand: pip install -r requirements.txt
     startCommand: python run_app.py
     envVars:
+      # 数据库配置 - 使用Render PostgreSQL
+      - key: DATABASE_URL
+        fromDatabase:
+          name: order-management-db
+          property: connectionString
+    envVars:
       # Python版本配置
       - key: PYTHON_VERSION
         value: 3.11.5
@@ -17,7 +23,7 @@ services:
       - key: SECRET_KEY
         value: f7e3f65dcf0d3e6da4b96b75e686aeffd9db86f5acd41c3ecfcca25239e57b61
       
-      # 数据库配置 (Render会自动提供DATABASE_URL)
+      # 数据库配置 - 使用Render PostgreSQL
       - key: SQLALCHEMY_TRACK_MODIFICATIONS
         value: false
       
@@ -53,4 +59,11 @@ services:
       - key: LOG_LEVEL
         value: INFO
       - key: LOG_TO_STDOUT
-        value: true 
+        value: true
+
+  # PostgreSQL数据库服务
+  - type: pserv
+    name: order-management-db
+    env: postgresql
+    plan: free
+    ipAllowList: [] 

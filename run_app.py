@@ -5,16 +5,28 @@
 适用于Anaconda环境
 """
 
-# 导入本地配置
-import config_local
+import os
 
 # 导入应用
 from app import create_app
 
 if __name__ == '__main__':
     print("🚀 启动集运管理系统...")
-    print(f"📧 邮件配置: {config_local.MAIL_USERNAME}")
-    print(f"🌐 访问地址: http://localhost:5000")
+    
+    # 检查是否为Render环境
+    is_render = os.environ.get('RENDER', False)
+    if is_render:
+        print("🌐 运行在Render环境")
+        print(f"📧 邮件配置: {os.environ.get('MAIL_USERNAME', '未设置')}")
+    else:
+        # 本地环境
+        try:
+            import config_local
+            print(f"📧 邮件配置: {config_local.MAIL_USERNAME}")
+        except ImportError:
+            print("📧 邮件配置: 使用环境变量")
+        print(f"🌐 访问地址: http://localhost:5000")
+    
     print("=" * 50)
     
     # 创建应用
