@@ -31,9 +31,9 @@ services:
       - key: MAIL_USE_SSL
         value: false
       - key: MAIL_USERNAME
-        value: dengfenglai1210@gmail.com
+        value: nunalinks@gmail.com
       - key: MAIL_PASSWORD
-        value: fwpkjjgtfyqomqqa
+        value: davh hlya mout oosq
       
       # 应用配置
       - key: BASE_URL
