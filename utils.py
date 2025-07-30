@@ -1,7 +1,7 @@
 import logging
 from flask import render_template
 from flask_mail import Message
-from datetime import datetime
+from datetime import datetime, timedelta
 import qrcode
 import io
 import base64
@@ -64,7 +64,8 @@ def send_cafe_arrival_email(package, mail):
         
         msg.html = render_template(
             'email/cafe_arrival.html',
-            package=package
+            package=package,
+            timedelta=timedelta
         )
         
         mail.send(msg)

@@ -131,21 +131,22 @@
                         <div class="package-value">{{ package.customer_name }}</div>
                     </div>
                     <div class="package-row">
-                        <div class="package-label">深圳到达时间:</div>
-                        <div class="package-value">{{ package.shenzhen_arrival_date|format_datetime }}</div>
-                    </div>
-                    <div class="package-row">
-                        <div class="package-label">咖啡馆到达时间:</div>
-                        <div class="package-value">{{ package.cafe_arrival_date_paris.strftime('%Y年%m月%d日 %H:%M') if package.cafe_arrival_date_paris else '未设置' }}</div>
+                        <div class="package-label">最晚取货时间:</div>
+                        <div class="package-value">
+                            {% if package.cafe_arrival_date_paris %}
+                                {{ (package.cafe_arrival_date_paris + timedelta(days=7)).strftime('%Y年%m月%d日') }}
+                            {% else %}
+                                未设置
+                            {% endif %}
+                        </div>
                     </div>
                 </div>
             </div>
             
             <div class="contact-info">
                 <h4>🏪 取件地址</h4>
-                <p><strong>取件地址:</strong> 我们的咖啡馆前台</p>
-                <p><strong>联系电话:</strong> 400-123-4567</p>
-                <p><strong>营业时间:</strong> 周一至周日 8:00-22:00</p>
+                <p><strong>取件地址:</strong> Komé Café & Atelier</p>
+                <p><strong>联系邮箱:</strong> nunalinks@gmail.com</p>
                 <p><strong>温馨提示:</strong> 请携带有效身份证件取件</p>
             </div>
             

@@ -98,6 +98,32 @@
             margin: 5px 0;
             color: #6c757d;
         }
+        .payment-info {
+            background: linear-gradient(135deg, #fff3cd, #ffeaa7);
+            border: 3px solid #f39c12;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            box-shadow: 0 4px 8px rgba(243, 156, 18, 0.2);
+        }
+        .payment-info h3 {
+            color: #d68910;
+            margin: 0 0 15px 0;
+            font-size: 18px;
+            text-align: center;
+        }
+        .payment-info p {
+            margin: 8px 0;
+            color: #856404;
+            line-height: 1.7;
+        }
+        .payment-info .highlight {
+            background-color: #fff;
+            padding: 10px;
+            border-radius: 5px;
+            border-left: 4px solid #f39c12;
+            margin: 15px 0;
+        }
     </style>
 </head>
 <body>
@@ -118,6 +144,17 @@
                 <p style="margin: 10px 0 0 0; color: #004085;">请妥善保管此快递单号</p>
             </div>
             
+            <div class="payment-info">
+                <h3>💰 重要付款流程</h3>
+                <p><strong>包裹入仓后，海淘仓将查验、重新打包、计重、并核算运费。</strong></p>
+                <p>在您完成付款后，我们会尽快发货并提供物流单号，供您查询。</p>
+                <div class="highlight">
+                    <p><strong>⚠️ 重要提醒：</strong></p>
+                    <p>请您保证所有包裹在发货截止日期前到仓，并及时完成付款，如由于以上原因导致包裹压仓，仓库将收取额外的仓储费。</p>
+                </div>
+                <p><strong>当付款完成后，请将付款凭证发给工作人员，确认出单。</strong></p>
+            </div>
+            
             <div class="package-info">
                 <h3 style="margin-top: 0; color: #007bff;">包裹信息</h3>
                 
@@ -125,10 +162,6 @@
                     <div class="package-row">
                         <div class="package-label">客户姓名:</div>
                         <div class="package-value">{{ package.customer_name }}</div>
-                    </div>
-                    <div class="package-row">
-                        <div class="package-label">到达时间:</div>
-                        <div class="package-value">{{ package.shenzhen_arrival_date|format_datetime }}</div>
                     </div>
                     <div class="package-row">
                         <div class="package-label">当前状态:</div>
@@ -141,15 +174,15 @@
             
             <div class="contact-info">
                 <h4>📞 联系我们</h4>
-                <p><strong>客服电话:</strong> 400-123-4567</p>
-                <p><strong>客服邮箱:</strong> service@yourcompany.com</p>
-                <p><strong>工作时间:</strong> 周一至周五 9:00-18:00</p>
+                <p><strong>客服邮箱:</strong> nunalinks@gmail.com</p>
             </div>
             
             <p><strong>后续流程:</strong></p>
             <ul>
-                <li>您的包裹将在深圳仓库进行整理和打包</li>
-                <li>我们将安排转运到法国</li>
+                <li>包裹入仓查验、重新打包、计重、核算运费</li>
+                <li>联系工作人员完成付款</li>
+                <li>付款完成后发送付款凭证确认出单</li>
+                <li>安排转运到法国</li>
                 <li>包裹到达法国咖啡馆后，您将收到取件码通知</li>
                 <li>请携带取件码到咖啡馆取件</li>
             </ul>
