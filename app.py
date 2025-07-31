@@ -1,6 +1,6 @@
 import threading
 from datetime import datetime, timedelta
-from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, send_from_directory, session
+from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, send_from_directory, session, send_file
 from flask_sqlalchemy import SQLAlchemy
 from flask_mail import Mail, Message
 from werkzeug.utils import secure_filename
@@ -835,30 +835,159 @@ def create_app(config_name='default'):
     
     @app.route('/package/<int:package_id>/send_cafe_email', methods=['POST'])
     def send_single_cafe_email(package_id):
-        """发送单个包裹的咖啡馆到达邮件（用于首页）"""
-        try:
-            package = Package.query.get_or_404(package_id)
+        """发送单个包裹的咖啡馆到达邮件"""
+        package = Package.query.get_or_404(package_id)
+        
+        if package.status == 'shenzhen_arrived':
+            # 更新状态为咖啡馆到达
+            package.status = 'cafe_arrived'
+            package.cafe_arrival_date = datetime.utcnow() # Changed from cafe_arrival_time to cafe_arrival_date
+            db.session.commit()
             
-            if package.status != 'cafe_arrived':
-                flash('只有已到咖啡馆的包裹才能发送咖啡馆到达邮件', 'warning')
-                return redirect(url_for('index'))
-            
-            # 同步发送邮件（立即更新状态）
-            mail = Mail(app)
+            # 发送邮件
             success = send_cafe_arrival_email(package, mail)
             
             if success:
-                flash(f'✅ 咖啡馆到达邮件发送成功！客户: {package.customer_name}，取件码: {package.pickup_code}', 'success')
+                flash('咖啡馆到达邮件发送成功！', 'success')
             else:
-                flash(f'❌ 咖啡馆到达邮件发送失败！客户: {package.customer_name}', 'error')
-            
-        except Exception as e:
-            flash(f'发送邮件时发生错误: {str(e)}', 'error')
+                flash('咖啡馆到达邮件发送失败，请检查邮箱配置。', 'error')
+        else:
+            flash('只有已到深圳的包裹才能发送咖啡馆到达邮件。', 'error')
         
-        return redirect(url_for('index'))
-    
+        return redirect(url_for('package_detail', package_id=package_id))
 
-    
+    @app.route('/excel_converter', methods=['GET', 'POST'])
+    def excel_converter():
+        """Excel格式转换功能"""
+        if request.method == 'POST':
+            if 'file' not in request.files:
+                flash('请选择要转换的Excel文件', 'error')
+                return render_template('excel_converter.html')
+            
+            file = request.files['file']
+            if file.filename == '':
+                flash('请选择要转换的Excel文件', 'error')
+                return render_template('excel_converter.html')
+            
+            if file and file.filename.endswith('.xlsx'):
+                try:
+                    import pandas as pd
+                    from io import BytesIO
+                    import base64
+                    
+                    # 读取原始Excel文件
+                    df_original = pd.read_excel(file)
+                    
+                    # 创建转换后的数据框
+                    converted_data = []
+                    
+                    # 遍历原始数据的每一行
+                    for index, row in df_original.iterrows():
+                        # 处理货物1-10列，提取快递单号
+                        tracking_numbers = []
+                        for i in range(1, 11):
+                            col_name = f'货物{i}'
+                            if col_name in row and pd.notna(row[col_name]) and str(row[col_name]).strip():
+                                value = str(row[col_name])
+                                # 提取快递单号（处理多种格式）
+                                if '快递单号:' in value:
+                                    # 处理标准格式: 快递单号:快递单号:实际单号
+                                    if value.count('快递单号:') == 2:
+                                        tracking_number = value.replace('快递单号:快递单号:', '').strip()
+                                        # 移除可能的后缀（如",中文"）
+                                        if ',' in tracking_number:
+                                            tracking_number = tracking_number.split(',')[0].strip()
+                                        if tracking_number and tracking_number != '快递单号:':
+                                            tracking_numbers.append(tracking_number)
+                                    # 处理重复前缀格式: 快递单号:快递单号:快递单号:...
+                                    elif value.count('快递单号:') > 2:
+                                        # 这种情况表示没有找到有效的快递单号，跳过
+                                        continue
+                        
+                        # 为每个快递单号创建一行数据
+                        for tracking_number in tracking_numbers:
+                            converted_row = {
+                                '客户姓名': row.get('姓名+拼音', '') if pd.notna(row.get('姓名+拼音', '')) else '',
+                                '快递单号': tracking_number,
+                                '中文品名 (必填)': '待填写',
+                                '英文品名 (必填)': 'To be filled',
+                                '材质 (中英文填写) (必填)': '待填写',
+                                '用途 (中英文填写) (必填)': '待填写',
+                                '国外海关编码 (必填)': '待填写',
+                                '产品类型/属性 (必填)': '待填写',
+                                '单位 套/包/组/个 (必填)': '个',
+                                '单箱产品数量 单位:套/组/个 (必填)': 1,
+                                '箱数/件数 CTN (必填为1)': 1,
+                                '申报单价币种 请根据渠道选择 (必填)': 'EUR',
+                                '单个产品申报单价 (仅保留小数点后两位且四舍五入) (必填)': 0.00,
+                                '单个产品净重KG (选填) (仅保留小数点后两位且四舍五入)': 0.00,
+                                '产品高清图片 (必须缩在方格内) (必填)': '',
+                                '品牌 (如实申报)': '',
+                                '品牌类型 (如实申报)': '',
+                                '型号 (如实申报)': '',
+                                '销售链接 (填写链接的前后不能有空格) (必填)': '',
+                                '备注 (产品的其他特殊说明)': f'原始数据: 客户{row.get("姓名+拼音", "")}, 手机号{row.get("国手机号", "")}, 邮箱{row.get("邮箱", "")}',
+                                '总产品数量': 1,
+                                '总申报金额': 0.00
+                            }
+                            converted_data.append(converted_row)
+                    
+                    if not converted_data:
+                        flash('未找到有效的快递单号数据', 'error')
+                        return render_template('excel_converter.html')
+                    
+                    # 创建转换后的DataFrame
+                    df_converted = pd.DataFrame(converted_data)
+                    
+                    # 生成转换后的Excel文件
+                    output = BytesIO()
+                    with pd.ExcelWriter(output, engine='openpyxl') as writer:
+                        df_converted.to_excel(writer, sheet_name='转换结果', index=False)
+                    
+                    output.seek(0)
+                    
+                    # 将文件内容编码为base64
+                    file_content = base64.b64encode(output.getvalue()).decode()
+                    
+                    flash(f'转换成功！共转换 {len(converted_data)} 条记录', 'success')
+                    
+                    return render_template('excel_converter.html', 
+                                         file_content=file_content, 
+                                         filename=f'converted_{datetime.now().strftime("%Y%m%d_%H%M%S")}.xlsx',
+                                         converted_data=converted_data[:10])  # 只显示前10条预览
+                    
+                except Exception as e:
+                    flash(f'转换失败: {str(e)}', 'error')
+                    return render_template('excel_converter.html')
+            else:
+                flash('请上传.xlsx格式的Excel文件', 'error')
+                return render_template('excel_converter.html')
+        
+        return render_template('excel_converter.html')
+
+    @app.route('/download_converted_excel')
+    def download_converted_excel():
+        """下载转换后的Excel文件"""
+        file_content = request.args.get('content')
+        filename = request.args.get('filename', 'converted.xlsx')
+        
+        if file_content:
+            try:
+                import base64
+                file_data = base64.b64decode(file_content)
+                return send_file(
+                    BytesIO(file_data),
+                    mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                    as_attachment=True,
+                    download_name=filename
+                )
+            except Exception as e:
+                flash(f'下载失败: {str(e)}', 'error')
+                return redirect(url_for('excel_converter'))
+        
+        return redirect(url_for('excel_converter'))
+
+
     return app
 
 if __name__ == '__main__':

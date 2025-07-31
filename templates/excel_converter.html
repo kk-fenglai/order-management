@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+
+{% block title %}Excel格式转换{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-exchange-alt me-2"></i>Excel格式转换工具
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <h5><i class="fas fa-info-circle me-2"></i>使用说明</h5>
+                        <p class="mb-2">此工具可以将原始订单数据转换为海关申报格式：</p>
+                        <ul class="mb-0">
+                            <li>上传包含"货物1-10"列的Excel文件</li>
+                            <li>系统会自动提取快递单号信息（支持部分填写）</li>
+                            <li>生成符合海关申报要求的格式</li>
+                            <li>必填字段会标记为"待填写"，需要手动完善</li>
+                        </ul>
+                    </div>
+
+                    {% if file_content %}
+                    <div class="alert alert-success">
+                        <h5><i class="fas fa-check-circle me-2"></i>转换成功！</h5>
+                        <p class="mb-2">共转换 {{ converted_data|length }} 条记录</p>
+                        <a href="{{ url_for('download_converted_excel', content=file_content, filename=filename) }}" 
+                           class="btn btn-success">
+                            <i class="fas fa-download me-2"></i>下载转换后的Excel文件
+                        </a>
+                    </div>
+
+                    <div class="card mt-3">
+                        <div class="card-header">
+                            <h6 class="mb-0">转换结果预览（前10条）</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-sm table-striped">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>客户姓名</th>
+                                            <th>快递单号</th>
+                                            <th>中文品名</th>
+                                            <th>英文品名</th>
+                                            <th>备注</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for row in converted_data %}
+                                        <tr>
+                                            <td>{{ row['客户姓名'] }}</td>
+                                            <td><code>{{ row['快递单号'] }}</code></td>
+                                            <td>{{ row['中文品名 (必填)'] }}</td>
+                                            <td>{{ row['英文品名 (必填)'] }}</td>
+                                            <td><small class="text-muted">{{ row['备注 (产品的其他特殊说明)'] }}</small></td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <form method="POST" enctype="multipart/form-data" class="mt-4">
+                        <div class="card">
+                            <div class="card-header">
+                                <h6 class="mb-0">上传Excel文件</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <label for="file" class="form-label">选择Excel文件 (.xlsx)</label>
+                                    <input type="file" class="form-control" id="file" name="file" accept=".xlsx" required>
+                                    <div class="form-text">请选择包含"货物1"到"货物10"列的Excel文件（客户可能只填写部分列）</div>
+                                </div>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-upload me-2"></i>开始转换
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+
+                    <div class="card mt-4">
+                        <div class="card-header">
+                            <h6 class="mb-0">转换规则说明</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h6>原始格式字段：</h6>
+                                    <ul class="list-unstyled">
+                                        <li><i class="fas fa-arrow-right text-primary me-2"></i>序号</li>
+                                        <li><i class="fas fa-arrow-right text-primary me-2"></i>姓名+拼音</li>
+                                        <li><i class="fas fa-arrow-right text-primary me-2"></i>国手机号</li>
+                                        <li><i class="fas fa-arrow-right text-primary me-2"></i>日期</li>
+                                        <li><i class="fas fa-arrow-right text-primary me-2"></i>邮箱</li>
+                                        <li><i class="fas fa-arrow-right text-primary me-2"></i>货物1-10（快递单号）</li>
+                                    </ul>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6>转换后格式字段：</h6>
+                                    <ul class="list-unstyled">
+                                        <li><i class="fas fa-arrow-left text-success me-2"></i>客户姓名</li>
+                                        <li><i class="fas fa-arrow-left text-success me-2"></i>快递单号</li>
+                                        <li><i class="fas fa-arrow-left text-success me-2"></i>中文品名 (必填)</li>
+                                        <li><i class="fas fa-arrow-left text-success me-2"></i>英文品名 (必填)</li>
+                                        <li><i class="fas fa-arrow-left text-success me-2"></i>材质、用途等必填字段</li>
+                                        <li><i class="fas fa-arrow-left text-success me-2"></i>海关申报相关字段</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// 文件上传预览
+document.getElementById('file').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file) {
+        const fileName = file.name;
+        const fileSize = (file.size / 1024 / 1024).toFixed(2);
+        
+        // 创建文件信息显示
+        const fileInfo = document.createElement('div');
+        fileInfo.className = 'alert alert-info mt-2';
+        fileInfo.innerHTML = `
+            <i class="fas fa-file-excel me-2"></i>
+            已选择文件: ${fileName} (${fileSize} MB)
+        `;
+        
+        // 移除之前的文件信息
+        const existingInfo = document.querySelector('.alert-info');
+        if (existingInfo && existingInfo.textContent.includes('已选择文件')) {
+            existingInfo.remove();
+        }
+        
+        // 添加新的文件信息
+        e.target.parentNode.appendChild(fileInfo);
+    }
+});
+</script>
+{% endblock %} 
